@@ -61,7 +61,7 @@ class ImgPage(BasicPage):
         """
         return self._get_filepath(self.EXT_BOX)
 
-    __box_path = property(__get_box_path)
+    _box_path = property(__get_box_path)
 
     def __get_img_path(self):
         """
@@ -69,13 +69,13 @@ class ImgPage(BasicPage):
         """
         return self._get_filepath(self.EXT_IMG)
 
+    _img_path = property(__get_img_path)
+
     def get_doc_file_path(self):
         """
         Returns the file path of the image corresponding to this page
         """
         return self.__get_img_path()
-
-    __img_path = property(__get_img_path)
 
     def __get_last_mod(self):
         try:
@@ -102,7 +102,7 @@ class ImgPage(BasicPage):
         """
         Get all the word boxes of this page.
         """
-        boxfile = self.__box_path
+        boxfile = self._box_path
 
         try:
             box_builder = pyocr.builders.LineBoxBuilder()
@@ -124,7 +124,7 @@ class ImgPage(BasicPage):
             return []
 
     def __set_boxes(self, boxes):
-        boxfile = self.__box_path
+        boxfile = self._box_path
         with codecs.open(boxfile, 'w', encoding='utf-8') as file_desc:
             pyocr.builders.LineBoxBuilder().write_file(file_desc, boxes)
         self.drop_cache()
@@ -200,9 +200,9 @@ class ImgPage(BasicPage):
         Will also change the page number of the current object.
         """
         src = {}
-        src["box"] = self.__get_box_path()
-        src["img"] = self.__get_img_path()
-        src["thumb"] = self._get_thumb_path()
+        src["box"] = self._box_path
+        src["img"] = self._img_path
+        src["thumb"] = self._thumb_path
 
         page_nb = self.page_nb
 
@@ -214,9 +214,9 @@ class ImgPage(BasicPage):
         self.page_nb = page_nb
 
         dst = {}
-        dst["box"] = self.__get_box_path()
-        dst["img"] = self.__get_img_path()
-        dst["thumb"] = self._get_thumb_path()
+        dst["box"] = self._box_path
+        dst["img"] = self._img_path
+        dst["thumb"] = self._thumb_path
 
         for key in src.keys():
             if os.access(src[key], os.F_OK):
@@ -237,9 +237,9 @@ class ImgPage(BasicPage):
         doc_pages = self.doc.pages[:]
         current_doc_nb_pages = self.doc.nb_pages
         paths = [
-            self.__get_box_path(),
-            self.__get_img_path(),
-            self._get_thumb_path(),
+            self._box_path,
+            self._img_path,
+            self._thumb_path,
         ]
         for path in paths:
             if os.access(path, os.F_OK):
@@ -260,9 +260,9 @@ class ImgPage(BasicPage):
         other_page_nb = other_page.page_nb
 
         to_move = [
-            (other_page.__get_box_path(), self.__get_box_path()),
-            (other_page.__get_img_path(), self.__get_img_path()),
-            (other_page._get_thumb_path(), self._get_thumb_path())
+            (other_page._box_path, self._box_path),
+            (other_page._img_path, self._img_path),
+            (other_page._thumb_path, self._thumb_path)
         ]
         for (src, dst) in to_move:
             # sanity check
@@ -283,4 +283,4 @@ class ImgPage(BasicPage):
         self.drop_cache()
 
     def get_docfilehash(self):
-        return self.doc.hash_file(self.__get_img_path())
+        return self.doc.hash_file(self._img_path)

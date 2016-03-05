@@ -83,6 +83,8 @@ class PdfPage(BasicPage):
     def __get_box_path(self):
         return self._get_filepath(self.EXT_BOX)
 
+    _box_path = property(__get_box_path)
+
     def __get_last_mod(self):
         try:
             return os.stat(self.__get_box_path()).st_mtime
@@ -299,8 +301,8 @@ class PdfPage(BasicPage):
         Will also change the page number of the current object.
         """
         src = {}
-        src["box"] = self.__get_box_path()
-        src["thumb"] = self._get_thumb_path()
+        src["box"] = self._box_path
+        src["thumb"] = self._thumb_path
 
         page_nb = self.page_nb
 
@@ -312,8 +314,8 @@ class PdfPage(BasicPage):
         self.page_nb = page_nb
 
         dst = {}
-        dst["box"] = self.__get_box_path()
-        dst["thumb"] = self._get_thumb_path()
+        dst["box"] = self._box_path
+        dst["thumb"] = self._thumb_path
 
         for key in src.keys():
             if os.access(src[key], os.F_OK):
@@ -327,8 +329,8 @@ class PdfPage(BasicPage):
         Move the page's index etc. to a new document.
         """
         src = {}
-        src["box"] = self.__get_box_path()
-        src["thumb"] = self._get_thumb_path()
+        src["box"] = self._box_path
+        src["thumb"] = self._thumb_path
 
         page_nb = self.page_nb
 
@@ -340,8 +342,8 @@ class PdfPage(BasicPage):
         self.page_nb = new_page_nb
 
         dst = {}
-        dst["box"] = self.__get_box_path()
-        dst["thumb"] = self._get_thumb_path()
+        dst["box"] = self._box_path
+        dst["thumb"] = self._thumb_path
 
         for key in src.keys():
             if os.access(src[key], os.F_OK):
