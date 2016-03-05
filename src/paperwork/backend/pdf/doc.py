@@ -63,7 +63,6 @@ class PdfPagesIterator(object):
     def __init__(self, pdfdoc):
         self.pdfdoc = pdfdoc
         self.idx = 0
-        self.pages = [pdfdoc.pages[i] for i in range(0, pdfdoc.nb_pages)]
 
     def __iter__(self):
         return self
@@ -71,7 +70,7 @@ class PdfPagesIterator(object):
     def next(self):
         if self.idx >= self.pdfdoc.nb_pages:
             raise StopIteration()
-        page = self.pages[self.idx]
+        page = self.pdfdoc.pages[self.idx]
         self.idx += 1
         return page
 
@@ -106,6 +105,7 @@ class PdfDoc(BasicDoc):
     can_edit = True
     can_split = True
     doctype = u"PDF"
+    _pages = None
 
     def __init__(self, docpath, docid=None):
         BasicDoc.__init__(self, docpath, docid)
@@ -153,7 +153,9 @@ class PdfDoc(BasicDoc):
     pdf = property(_open_pdf)
 
     def __get_pages(self):
-        return PdfPages(self, self.pdf)
+        if self._pages is None:
+            self._pages = PdfPages(self, self.pdf)
+        return self._pages
 
     pages = property(__get_pages)
 
@@ -194,6 +196,9 @@ class PdfDoc(BasicDoc):
 
     def drop_cache(self):
         BasicDoc.drop_cache(self)
+        if self._pages:
+            del self._pages
+        self._pages = None
         if self._pdf:
             del self._pdf
         self._pdf = None
