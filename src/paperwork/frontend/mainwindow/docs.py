@@ -1253,7 +1253,7 @@ class DocPropertiesPanel(object):
     def on_row_activated(self, rowbox, row):
         """
         When no specific part of a row is clicked on, do as if user had clicked
-        on it's check_button. This requires less precision for the user.
+        on its check_button. This requires less precision for the user.
         """
         row = rowbox.get_selected_row()
         label_box = row.get_children()[0]
