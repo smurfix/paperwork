@@ -399,5 +399,8 @@ class BasicDoc(object):
     def destroy_pages(self, pages):
         raise NotImplementedError()
 
+    def split_pages(self, pages):
+        raise NotImplementedError()
+
     def clone(self):
         raise NotImplementedError()

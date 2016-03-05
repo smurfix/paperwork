@@ -206,6 +206,61 @@ class PdfDoc(BasicDoc):
     def get_docfilehash(self):
         return BasicDoc.hash_file("%s/%s" % (self.path, PDF_FILENAME))
 
+    def split_pages(self, pages):
+        """
+        Split the document at these page.
+        """
+
+        # You can't leave empty documents
+        if 0 in pages:
+            pages.remove(0)
+        if not pages:
+            return
+
+        logger.info("Splitting %s at %s" % (self.docid,pages))
+
+        # Poppler can't work with individual pages, thus we use pdfrw.
+        from paperwork.backend.pdf.doc import PDF_FILENAME, PdfDoc
+        from paperwork.backend.docimport import SinglePdfImporter
+        import pdfrw
+
+        doc_pages = self.pages[:]
+        pdir = os.path.abspath(os.path.join(self.path,os.path.pardir))
+        new_docs = []
+
+        new_doc = PdfDoc(pdir)
+        os.mkdir(new_doc.path)
+        new_doc.labels = self.labels[:]
+
+        pdf_r_name = os.path.join(self.path,PDF_FILENAME)
+        pdf_a_name = os.path.join(self.path,PDF_FILENAME+'.new')
+        pdf_r = pdfrw.PdfReader(pdf_r_name)
+        dest = pdfrw.PdfWriter()
+        dest_path = pdf_a_name
+
+        offset = 0
+        for pdf_page,page in zip(pdf_r.pages,doc_pages):
+            if page.page_nb in pages:
+                dest.write(dest_path)
+
+                new_doc = PdfDoc(pdir)
+                os.mkdir(new_doc.path)
+                new_doc.labels = self.labels[:]
+                dest = pdf_b = pdfrw.PdfWriter()
+                dest_path = os.path.join(new_doc.path,PDF_FILENAME)
+                new_docs.append(new_doc)
+                offset = page.page_nb
+            dest.addpage(pdf_page)
+            if offset:
+                offset += 1
+                page.move_index(new_doc,offset)
+
+        dest.write(dest_path)
+        self.drop_cache()
+
+        os.rename(pdf_a_name,pdf_r_name)
+        return new_docs
+
     def destroy_pages(self, pages):
         """
         Delete these pages. May delete the whole document.
