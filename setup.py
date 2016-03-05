@@ -179,6 +179,7 @@ Main features are:
         "termcolor",  # used by paperwork-chkdeps
         "Whoosh",
         "simplebayes",
+        "pdfrw",
         # paperwork-chkdeps take care of all the dependencies that can't be
         # handled here. For instance:
         # - Dependencies using gobject introspection

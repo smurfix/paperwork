@@ -209,6 +209,77 @@ class PdfPage(BasicPage):
 
     size = property(__get_size)
 
+    def destroy(self):
+        """
+        Delete the page. May delete the whole document if it's actually the
+        last page.
+        """
+
+        logger.info("Destroying page: %s" % self)
+        if self.doc.nb_pages <= 1:
+            self.doc.destroy()
+            return
+
+        # Poppler can't delete individual pages, thus we use pdfrw.
+        from paperwork.backend.pdf.doc import PDF_FILENAME
+        import pdfrw
+
+        doc_pages = self.doc.pages[self.page_nb+1:]
+        paths = [
+            self.__get_box_path(),
+            self._get_thumb_path(),
+        ]
+
+        pdf_r_name = os.path.join(self.doc.path,PDF_FILENAME)
+        pdf_w_name = os.path.join(self.doc.path,PDF_FILENAME+'.new')
+        pdf_r = pdfrw.PdfReader(pdf_r_name)
+        pdf_w = pdfrw.PdfWriter()
+
+        for cur_page,page in enumerate(pdf_r.pages):
+            if cur_page != self.page_nb:
+                pdf_w.addpage(page)
+        pdf_w.write(pdf_w_name)
+        os.rename(pdf_w_name,pdf_r_name)
+
+        for path in paths:
+            if os.access(path, os.F_OK):
+                os.unlink(path)
+        for page in doc_pages:
+            page.change_index(offset=-1)
+        self.drop_cache()
+        self.doc.drop_cache()
+
+    def change_index(self, offset=0):
+        """
+        Move the page number by a given offset. Beware to not let any hole
+        in the page numbers when doing this. Make sure also that the wanted
+        number is available.
+        Will also change the page number of the current object.
+        """
+        src = {}
+        src["box"] = self.__get_box_path()
+        src["thumb"] = self._get_thumb_path()
+
+        page_nb = self.page_nb
+
+        page_nb += offset
+
+        logger.info("--> Moving page %d (+%d) to index %d"
+                    % (self.page_nb, offset, page_nb))
+
+        self.page_nb = page_nb
+
+        dst = {}
+        dst["box"] = self.__get_box_path()
+        dst["thumb"] = self._get_thumb_path()
+
+        for key in src.keys():
+            if os.access(src[key], os.F_OK):
+                if os.access(dst[key], os.F_OK):
+                    logger.error("Error: file already exists: %s" % dst[key])
+                    assert(0)
+                os.rename(src[key], dst[key])
+
     def print_page_cb(self, print_op, print_context, keep_refs={}):
         ctx = print_context.get_cairo_context()
 

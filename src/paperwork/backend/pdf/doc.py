@@ -83,6 +83,12 @@ class PdfPages(object):
         self.page = {}
 
     def __getitem__(self, idx):
+        if isinstance(idx,slice):
+            res = []
+            for i in range(idx.start or 0, idx.stop or self.pdf.get_n_pages(), idx.step or 1):
+                res.append(self[i])
+            return res
+
         if idx < 0:
             idx = self.pdf.get_n_pages() + idx
         if idx not in self.page:
@@ -97,7 +103,7 @@ class PdfPages(object):
 
 
 class PdfDoc(BasicDoc):
-    can_edit = False
+    can_edit = True
     doctype = u"PDF"
 
     def __init__(self, docpath, docid=None):
