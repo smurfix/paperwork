@@ -37,6 +37,7 @@ class BasicDoc(object):
 
     pages = []
     can_edit = False
+    can_split = False
 
     def __init__(self, docpath, docid=None):
         """

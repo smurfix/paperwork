@@ -190,6 +190,9 @@ class BasicPage(object):
     def print_page_cb(self, print_op, print_context, keep_refs={}):
         raise NotImplementedError()
 
+    def split(self):
+        raise NotImplementedError()
+
     def destroy(self):
         raise NotImplementedError()
 

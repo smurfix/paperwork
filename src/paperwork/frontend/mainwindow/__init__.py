@@ -1423,6 +1423,40 @@ class ActionDeletePage(SimpleAction):
         self.__main_win.schedulers['index'].schedule(job)
 
 
+class ActionSplitPage(SimpleAction):
+    def __init__(self, main_window):
+        SimpleAction.__init__(self, "Delete page")
+        self.__main_win = main_window
+
+    def do(self, page=None):
+        """
+        Ask for confirmation and then delete the page being viewed.
+        """
+        if not ask_confirmation(self.__main_win.window):
+            return
+
+        if page is None:
+            page = self.__main_win.page
+        doc = page.doc
+
+        SimpleAction.do(self)
+        logger.info("Splitting ...")
+        new_doc = page.split()
+        if new_doc is None:
+            return
+        logger.info("Split")
+        doc.drop_cache()
+        self.__main_win.page = None
+        set_widget_state(self.__main_win.need_page_widgets, False)
+        self.__main_win.refresh_docs({doc,new_doc})
+        self.__main_win.refresh_doc_list()
+        self.__main_win.show_doc(new_doc, force_refresh=True)
+
+        job = self.__main_win.job_factories['index_updater'].make(
+            self.__main_win.docsearch, upd_docs={doc,new_doc}, optimize=False)
+        self.__main_win.schedulers['index'].schedule(job)
+
+
 class ActionRedoOCR(SimpleAction):
     def __init__(self, name, main_window, ask_confirmation=True):
         SimpleAction.__init__(self, name)
@@ -2618,6 +2652,7 @@ class MainWindow(object):
                 drawer.connect("page-selected", self._on_page_drawer_selected)
                 drawer.connect("page-edited", self._on_page_drawer_edited)
                 drawer.connect("page-deleted", self._on_page_drawer_deleted)
+                drawer.connect("doc-split", self._on_page_drawer_split)
             previous_drawer = drawer
             self.page_drawers.append(drawer)
             self.img['canvas'].add_drawer(drawer)
@@ -2740,6 +2775,9 @@ class MainWindow(object):
 
     def _on_page_drawer_deleted(self, page_drawer):
         ActionDeletePage(self).do(page_drawer.page)
+
+    def _on_page_drawer_split(self, page_drawer):
+        ActionSplitPage(self).do(page_drawer.page)
 
     def refresh_label_list(self):
         # make sure the correct doc is taken into account

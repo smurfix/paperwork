@@ -265,6 +265,7 @@ class PageDrawer(Drawer, GObject.GObject):
                             GObject.TYPE_PYOBJECT,  # List of PageEditionAction
                         )),
         'page-deleted': (GObject.SignalFlags.RUN_LAST, None, ()),
+        'doc-split': (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
     def __init__(self, page,
@@ -336,6 +337,18 @@ class PageDrawer(Drawer, GObject.GObject):
                      Gtk.IconLookupFlags.NO_SVG).load_icon(),
                  self._on_delete,
                  _("Delete page")),
+            )
+            first_editor_buttons_pos += 10 + self.BUTTON_SIZE
+
+        if self.page.doc.can_split and self.page.page_nb > 0:
+            first_editor_buttons.append(
+                # button 'split'
+                ((-10 - self.BUTTON_SIZE, first_editor_buttons_pos),
+                 icon_theme.lookup_icon(
+                     "emblem-shared", self.BUTTON_SIZE,
+                     Gtk.IconLookupFlags.NO_SVG).load_icon(),
+                 self._on_split,
+                 _("Split document here")),
             )
             first_editor_buttons_pos += 10 + self.BUTTON_SIZE
 
@@ -1050,6 +1063,9 @@ class PageDrawer(Drawer, GObject.GObject):
 
     def _on_delete(self):
         self.emit("page-deleted")
+
+    def _on_split(self):
+        self.emit("doc-split")
 
 
 GObject.type_register(PageDrawer)

@@ -104,6 +104,7 @@ class PdfPages(object):
 
 class PdfDoc(BasicDoc):
     can_edit = True
+    can_split = True
     doctype = u"PDF"
 
     def __init__(self, docpath, docid=None):
