@@ -136,10 +136,10 @@ class ImgPage(BasicPage):
         """
         Returns an image object corresponding to the page
         """
-        return PIL.Image.open(self.__img_path)
+        return PIL.Image.open(self._img_path)
 
     def __set_img(self, img):
-        img.save(self.__img_path)
+        img.save(self._img_path)
         self.drop_cache()
 
     img = property(__get_img, __set_img)
