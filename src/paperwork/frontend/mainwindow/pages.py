@@ -258,8 +258,6 @@ class PageDrawer(Drawer, GObject.GObject):
 
     PAGE_DRAG_ID = 128
 
-    selected = False
-
     __gsignals__ = {
         'page-selected': (GObject.SignalFlags.RUN_LAST, None, (GObject.TYPE_INT,)),
         'page-edited': (GObject.SignalFlags.RUN_LAST, None,
@@ -597,7 +595,7 @@ class PageDrawer(Drawer, GObject.GObject):
     def draw_border(self, cairo_context):
         must_redraw = False
         border = self.BORDER_BASIC
-        if self.boxes['highlighted'] or self.selected:
+        if self.boxes['highlighted'] or self.page.selected:
             border = self.BORDER_HIGHLIGHTED
             must_redraw = True
 
@@ -824,7 +822,7 @@ class PageDrawer(Drawer, GObject.GObject):
         if not self.visible:
             return
 
-        if (self.selected or (self.show_border
+        if (self.page.selected or (self.show_border
                 and (self.mouse_over or self.boxes['highlighted']))):
             self.draw_border(cairo_context)
 
@@ -865,7 +863,7 @@ class PageDrawer(Drawer, GObject.GObject):
 
     def redraw(self, extra_border=0):
         border = self.BORDER_BASIC
-        if self.selected or self.boxes['highlighted']:
+        if self.page.selected or self.boxes['highlighted']:
             border = self.BORDER_HIGHLIGHTED
 
         border_width = max(border[0], extra_border)

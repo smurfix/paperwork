@@ -104,6 +104,8 @@ class BasicPage(object):
 
     can_edit = False
 
+    selected = False
+
     PAGE_ID_SEPARATOR = "|"
 
     def __init__(self, doc, page_nb):

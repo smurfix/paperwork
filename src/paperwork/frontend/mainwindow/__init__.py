@@ -2761,8 +2761,7 @@ class MainWindow(object):
 
     def _on_page_drawer_selected(self, page_drawer, mode=0):
         if mode:
-            page_drawer.selected = not page_drawer.selected
-
+            page_drawer.page.selected = not page_drawer.page.selected
         else:
             self.set_layout('paged', force_refresh=False)
             self.show_page(page_drawer.page, force_refresh=True)
