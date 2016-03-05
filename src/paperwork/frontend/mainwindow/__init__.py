@@ -1432,7 +1432,7 @@ class ActionSplitPage(SimpleAction):
         SimpleAction.__init__(self, "Delete page")
         self.__main_win = main_window
 
-    def do(self, page=None):
+    def do(self, doc, page=None):
         """
         Ask for confirmation and then delete the page being viewed.
         """
@@ -1441,23 +1441,32 @@ class ActionSplitPage(SimpleAction):
 
         if page is None:
             page = self.__main_win.page
-        doc = page.doc
+        if not isinstance(page,list):
+            assert doc == page.doc
 
         SimpleAction.do(self)
         logger.info("Splitting ...")
-        new_doc = page.split()
-        if new_doc is None:
+        if isinstance(page,list):
+            new_docs = doc.split_pages(page)
+        else:
+            new_docs = page.split()
+        if not new_docs:
             return
+        if not isinstance(new_docs,list):
+            new_docs = [new_docs]
+        new_doc = new_docs[0]
+        new_docs = set(new_docs)
+        new_docs.add(doc)
         logger.info("Split")
         doc.drop_cache()
         self.__main_win.page = None
         set_widget_state(self.__main_win.need_page_widgets, False)
-        self.__main_win.refresh_docs({doc,new_doc})
+        self.__main_win.refresh_docs(new_docs)
         self.__main_win.refresh_doc_list()
         self.__main_win.show_doc(new_doc, force_refresh=True)
 
         job = self.__main_win.job_factories['index_updater'].make(
-            self.__main_win.docsearch, upd_docs={doc,new_doc}, optimize=False)
+            self.__main_win.docsearch, upd_docs=new_docs, optimize=False)
         self.__main_win.schedulers['index'].schedule(job)
 
 
@@ -2784,12 +2793,17 @@ class MainWindow(object):
         ActionDeletePage(self).do(self.doc, page_drawer.page)
 
     def _on_page_drawer_split(self, page_drawer):
-        ActionSplitPage(self).do(page_drawer.page)
+        ActionSplitPage(self).do(self.doc, page_drawer.page)
 
     def delete_selected_pages(self):
         pages = list((p.page_nb for p in self.doc.pages if p.selected))
         if pages:
             ActionDeletePage(self).do(self.doc, pages)
+
+    def split_selected_pages(self):
+        pages = list((p.page_nb for p in self.doc.pages if p.selected))
+        if pages:
+            ActionSplitPage(self).do(self.doc, pages)
 
     def refresh_label_list(self):
         # make sure the correct doc is taken into account
@@ -2923,6 +2937,10 @@ class MainWindow(object):
         return False
 
     def __on_key_press_event_cb(self, widget, event):
+        if event.keyval in (Gdk.KEY_slash, Gdk.KEY_KP_Divide):
+            self.split_selected_pages()
+            return True
+
         if event.keyval in (Gdk.KEY_BackSpace, Gdk.KEY_Delete):
             self.delete_selected_pages()
             return True
