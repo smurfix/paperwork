@@ -1389,7 +1389,7 @@ class ActionDeletePage(SimpleAction):
         SimpleAction.__init__(self, "Delete page")
         self.__main_win = main_window
 
-    def do(self, page=None):
+    def do(self, doc, page=None):
         """
         Ask for confirmation and then delete the page being viewed.
         """
@@ -1398,11 +1398,15 @@ class ActionDeletePage(SimpleAction):
 
         if page is None:
             page = self.__main_win.page
-        doc = page.doc
+        if not isinstance(page,list):
+            assert doc == page.doc
 
         SimpleAction.do(self)
         logger.info("Deleting ...")
-        page.destroy()
+        if isinstance(page,list):
+            doc.destroy_pages(page)
+        else:
+            page.destroy()
         logger.info("Deleted")
         doc.drop_cache()
         self.__main_win.page = None
@@ -2777,10 +2781,15 @@ class MainWindow(object):
         self.refresh_docs([page.doc])
 
     def _on_page_drawer_deleted(self, page_drawer):
-        ActionDeletePage(self).do(page_drawer.page)
+        ActionDeletePage(self).do(self.doc, page_drawer.page)
 
     def _on_page_drawer_split(self, page_drawer):
         ActionSplitPage(self).do(page_drawer.page)
+
+    def delete_selected_pages(self):
+        pages = list((p.page_nb for p in self.doc.pages if p.selected))
+        if pages:
+            ActionDeletePage(self).do(self.doc, pages)
 
     def refresh_label_list(self):
         # make sure the correct doc is taken into account
@@ -2914,6 +2923,10 @@ class MainWindow(object):
         return False
 
     def __on_key_press_event_cb(self, widget, event):
+        if event.keyval in (Gdk.KEY_BackSpace, Gdk.KEY_Delete):
+            self.delete_selected_pages()
+            return True
+
         direction = 0
         if event.keyval == Gdk.KEY_Page_Up:
             direction = -1
