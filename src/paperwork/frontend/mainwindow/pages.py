@@ -940,7 +940,7 @@ class PageDrawer(Drawer, GObject.GObject):
                     self.canvas.redraw(((box_pos[0] - self.LINE_WIDTH,
                                         box_pos[1] - self.LINE_WIDTH),
                                         (box_pos[2] + (2 * self.LINE_WIDTH),
-                                        box_pos[2] + (2 * self.LINE_WIDTH))))
+                                        box_pos[3] + (2 * self.LINE_WIDTH))))
 
                 self.boxes["mouse_over"] = box
 
@@ -950,7 +950,7 @@ class PageDrawer(Drawer, GObject.GObject):
                     self.canvas.redraw(((box_pos[0] - self.LINE_WIDTH,
                                         box_pos[1] - self.LINE_WIDTH),
                                         (box_pos[2] + (2 * self.LINE_WIDTH),
-                                        box_pos[2] + (2 * self.LINE_WIDTH))))
+                                        box_pos[3] + (2 * self.LINE_WIDTH))))
 
         if must_redraw:
             self.redraw()
