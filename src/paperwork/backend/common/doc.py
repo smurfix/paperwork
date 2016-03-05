@@ -272,7 +272,9 @@ class BasicDoc(object):
             return -1
         if self.is_new and other.is_new:
             return 0
-        return cmp(self.__docid, other.__docid)
+        id1 = tuple((int(x) for x in self.__docid.split('_')))
+        id2 = tuple((int(x) for x in other.__docid.split('_')))
+        return cmp(id1,id2)
 
     def __lt__(self, other):
         return self.__doc_cmp(other) < 0
