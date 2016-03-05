@@ -25,6 +25,7 @@ import hashlib
 from paperwork.backend.labels import Label
 from paperwork.backend.util import rm_rf
 
+from gi.repository import GLib
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
@@ -401,6 +402,9 @@ class BasicDoc(object):
 
     def split_pages(self, pages):
         raise NotImplementedError()
+
+    def open(self):
+        GLib.spawn_async([b"xdg-open",self.path.encode('utf-8')], flags=GLib.SPAWN_SEARCH_PATH)
 
     def clone(self):
         raise NotImplementedError()

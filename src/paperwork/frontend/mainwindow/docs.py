@@ -817,6 +817,16 @@ class DocList(object):
 
         button_box.add(edit_button)
 
+        open_button = Gtk.Button.new_from_icon_name(
+            "document-open-symbolic",
+            Gtk.IconSize.MENU)
+        open_button.set_relief(Gtk.ReliefStyle.NONE)
+        open_button.connect(
+            "clicked",
+            lambda _: GLib.idle_add(doc.open))
+
+        button_box.add(open_button)
+
         delete_button = Gtk.Button.new_from_icon_name(
             "edit-delete-symbolic",
             Gtk.IconSize.MENU)
@@ -835,6 +845,7 @@ class DocList(object):
         if not selected:
             delete_button.set_visible(False)
             edit_button.set_visible(False)
+            open_button.set_visible(False)
 
     def _show_loading(self):
         # remove the list, put the canvas+spinner instead

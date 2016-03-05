@@ -299,6 +299,8 @@ class PdfDoc(BasicDoc):
         os.rename(pdf_w_name,pdf_r_name)
         self.drop_cache()
 
+    def open(self):
+        GLib.spawn_async([b"xdg-open",os.path.join(self.path,PDF_FILENAME).encode('utf-8')], flags=GLib.SPAWN_SEARCH_PATH)
 
 def is_pdf_doc(docpath):
     if not os.path.isdir(docpath):
