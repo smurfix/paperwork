@@ -206,6 +206,44 @@ class PdfDoc(BasicDoc):
     def get_docfilehash(self):
         return BasicDoc.hash_file("%s/%s" % (self.path, PDF_FILENAME))
 
+    def destroy_pages(self, pages):
+        """
+        Delete these pages. May delete the whole document.
+        """
+
+        logger.info("Destroying pages: %s %s" % (self,pages))
+        if self.nb_pages <= 1:
+            self.destroy()
+            return
+
+        # Poppler can't delete individual pages, thus we use pdfrw.
+        from paperwork.backend.pdf.doc import PDF_FILENAME
+        import pdfrw
+
+        doc_pages = self.pages[:]
+
+        pdf_r_name = os.path.join(self.path,PDF_FILENAME)
+        pdf_w_name = os.path.join(self.path,PDF_FILENAME+'.new')
+        pdf_r = pdfrw.PdfReader(pdf_r_name)
+        pdf_w = pdfrw.PdfWriter()
+
+        offset = 0
+        for pdf_page,page in zip(pdf_r.pages,doc_pages):
+            if page.page_nb in pages:
+                pages.remove(page.page_nb)
+                for path in (page._box_path, page._thumb_path):
+                    if os.access(path, os.F_OK):
+                        os.unlink(path)
+                offset += 1
+            else:
+                pdf_w.addpage(pdf_page)
+                if offset:
+                    page.change_index(offset=-offset)
+
+        pdf_w.write(pdf_w_name)
+        os.rename(pdf_w_name,pdf_r_name)
+        self.drop_cache()
+
 
 def is_pdf_doc(docpath):
     if not os.path.isdir(docpath):

@@ -396,5 +396,8 @@ class BasicDoc(object):
         dochash = hashlib.sha256(open(path, 'rb').read()).hexdigest()
         return int(dochash, 16)
 
+    def destroy_pages(self, pages):
+        raise NotImplementedError()
+
     def clone(self):
         raise NotImplementedError()

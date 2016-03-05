@@ -265,33 +265,7 @@ class PdfPage(BasicPage):
             self.doc.destroy()
             return
 
-        # Poppler can't delete individual pages, thus we use pdfrw.
-        from paperwork.backend.pdf.doc import PDF_FILENAME
-        import pdfrw
-
-        doc_pages = self.doc.pages[self.page_nb+1:]
-        paths = [
-            self.__get_box_path(),
-            self._get_thumb_path(),
-        ]
-
-        pdf_r_name = os.path.join(self.doc.path,PDF_FILENAME)
-        pdf_w_name = os.path.join(self.doc.path,PDF_FILENAME+'.new')
-        pdf_r = pdfrw.PdfReader(pdf_r_name)
-        pdf_w = pdfrw.PdfWriter()
-
-        for cur_page,page in enumerate(pdf_r.pages):
-            if cur_page != self.page_nb:
-                pdf_w.addpage(page)
-        pdf_w.write(pdf_w_name)
-        os.rename(pdf_w_name,pdf_r_name)
-
-        for path in paths:
-            if os.access(path, os.F_OK):
-                os.unlink(path)
-        for page in doc_pages:
-            page.change_index(offset=-1)
-        self.doc.drop_cache()
+        self.doc.destroy_pages([self.page_nb])
 
     def change_index(self, offset=0):
         """
