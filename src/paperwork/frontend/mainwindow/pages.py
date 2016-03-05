@@ -258,8 +258,10 @@ class PageDrawer(Drawer, GObject.GObject):
 
     PAGE_DRAG_ID = 128
 
+    selected = False
+
     __gsignals__ = {
-        'page-selected': (GObject.SignalFlags.RUN_LAST, None, ()),
+        'page-selected': (GObject.SignalFlags.RUN_LAST, None, (GObject.TYPE_INT,)),
         'page-edited': (GObject.SignalFlags.RUN_LAST, None,
                         (
                             GObject.TYPE_PYOBJECT,  # List of PageEditionAction
@@ -593,9 +595,11 @@ class PageDrawer(Drawer, GObject.GObject):
         self.visible = False
 
     def draw_border(self, cairo_context):
+        must_redraw = False
         border = self.BORDER_BASIC
-        if self.boxes['highlighted']:
+        if self.boxes['highlighted'] or self.selected:
             border = self.BORDER_HIGHLIGHTED
+            must_redraw = True
 
         border_width = border[0]
         border_color = border[1]
@@ -614,6 +618,8 @@ class PageDrawer(Drawer, GObject.GObject):
             cairo_context.paint()
         finally:
             cairo_context.restore()
+        if must_redraw:
+            self.redraw()
 
     def draw_tmp_area(self, cairo_context):
         cairo_context.save()
@@ -818,8 +824,8 @@ class PageDrawer(Drawer, GObject.GObject):
         if not self.visible:
             return
 
-        if (self.show_border
-                and (self.mouse_over or self.boxes['highlighted'])):
+        if (self.selected or (self.show_border
+                and (self.mouse_over or self.boxes['highlighted']))):
             self.draw_border(cairo_context)
 
         if not self.surface:
@@ -859,7 +865,7 @@ class PageDrawer(Drawer, GObject.GObject):
 
     def redraw(self, extra_border=0):
         border = self.BORDER_BASIC
-        if self.boxes['highlighted']:
+        if self.selected or self.boxes['highlighted']:
             border = self.BORDER_HIGHLIGHTED
 
         border_width = max(border[0], extra_border)
@@ -986,7 +992,11 @@ class PageDrawer(Drawer, GObject.GObject):
                     return
 
         if self.editor_state == "before":
-            self.emit('page-selected')
+            if event.button.state & Gdk.ModifierType.BUTTON3_MASK:
+                mode = 1
+            else:
+                mode = 0
+            self.emit('page-selected', mode)
             return
 
         return

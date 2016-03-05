@@ -2759,9 +2759,13 @@ class MainWindow(object):
         self.set_mouse_cursor("Busy")
         GLib.idle_add(self._show_page_hook, page, force_refresh)
 
-    def _on_page_drawer_selected(self, page_drawer):
-        self.set_layout('paged', force_refresh=False)
-        self.show_page(page_drawer.page, force_refresh=True)
+    def _on_page_drawer_selected(self, page_drawer, mode=0):
+        if mode:
+            page_drawer.selected = not page_drawer.selected
+
+        else:
+            self.set_layout('paged', force_refresh=False)
+            self.show_page(page_drawer.page, force_refresh=True)
 
     def _on_page_drawer_edited(self, page_drawer, actions):
         page = page_drawer.page
