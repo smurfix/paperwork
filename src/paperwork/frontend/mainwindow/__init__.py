@@ -1466,7 +1466,7 @@ class ActionSplitPage(SimpleAction):
         self.__main_win.show_doc(new_doc, force_refresh=True)
 
         job = self.__main_win.job_factories['index_updater'].make(
-            self.__main_win.docsearch, upd_docs=new_docs, optimize=False)
+            self.__main_win.docsearch, upd_docs={doc}, new_docs=new_docs, optimize=False)
         self.__main_win.schedulers['index'].schedule(job)
 
 
