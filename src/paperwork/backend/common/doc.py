@@ -143,12 +143,15 @@ class BasicDoc(object):
         if label in self.labels and not force:
             return
         logger.info("SetStorageL 2 %s %s %s",self,self._storage,label)
-        with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'a',
-                         encoding='utf-8') as file_desc:
-            name = label.name
-            if self._storage is not None and self._storage[0] == label:
-                name = "%s::%d" % self._storage
-            file_desc.write("%s,%s\n" % (name, label.get_color_str()))
+        try:
+            with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'a',
+                            encoding='utf-8') as file_desc:
+                name = label.name
+                if self._storage is not None and self._storage[0] == label:
+                    name = "%s::%d" % self._storage
+                file_desc.write("%s,%s\n" % (name, label.get_color_str()))
+        except OSError:
+            self._write_labels()
 
     def remove_label(self, to_remove):
         """
@@ -158,13 +161,7 @@ class BasicDoc(object):
             return
         labels = self.labels
         labels.remove(to_remove)
-        with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
-                         encoding='utf-8') as file_desc:
-            for label in labels:
-                name = label.name
-                if self._storage is not None and self._storage[0] == label:
-                    name = "%s::%d" % self._storage
-                file_desc.write("%s,%s\n" % (name, label.get_color_str()))
+        self._write_labels(labels)
 
     def __get_labels(self):
         """
@@ -202,17 +199,21 @@ class BasicDoc(object):
         """
         Add a label on the document.
         """
-        with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
-                         encoding='utf-8') as file_desc:
+        self.__cache['labels'] = labels
+        self._write_labels(labels)
+
+    labels = property(__get_labels, __set_labels)
+
+    def _write_labels(self,labels):
+        label_file = os.path.join(self.path, self.LABEL_FILE)
+        with codecs.open(label_file+'.new', 'w', encoding='utf-8') as file_desc:
             for label in labels:
                 name = label.name
                 if self._storage and self._storage[0] == label:
                     name = "%s::%d" % self._storage
                 file_desc.write("%s,%s\n" % (name,
                                              label.get_color_str()))
-        self.__cache['labels'] = labels
-
-    labels = property(__get_labels, __set_labels)
+        os.rename(label_file+'.new',label_file)
 
     def get_index_text(self):
         txt = u""
@@ -261,13 +262,7 @@ class BasicDoc(object):
         logger.info("%s : Updating label ([%s] -> [%s])"
                     % (str(self), old_label.name, new_label.name))
         labels.add(new_label)
-        with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
-                         encoding='utf-8') as file_desc:
-            for label in labels:
-                name = label.name
-                if self._storage is not None and self._storage[0] == label:
-                    name = "%s::%d" % self._storage
-                file_desc.write("%s,%s\n" % (name, label.get_color_str()))
+        self._write_labels(labels)
 
     @staticmethod
     def get_export_formats():
@@ -408,9 +403,10 @@ class BasicDoc(object):
         if txt == u"":
             os.unlink(extra_txt_file)
         else:
-            with codecs.open(extra_txt_file, 'w',
+            with codecs.open(extra_txt_file+'.new', 'w',
                              encoding='utf-8') as file_desc:
                 file_desc.write(txt)
+            os.rename(extra_txt_file+'.new',extra_txt_file)
 
     extra_text = property(__get_extra_text, __set_extra_text)
 

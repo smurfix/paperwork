@@ -165,16 +165,17 @@ class BasicPage(object):
             return self.__thumbnail_cache[0]
 
         # get from the file
+        thumbnail = None
         try:
             if (os.path.getmtime(self.get_doc_file_path()) <
                     os.path.getmtime(self._thumb_path)):
                 thumbnail = PIL.Image.open(self._thumb_path)
-            else:
-                thumbnail = self.__make_thumbnail(width, height)
-                thumbnail.save(self._thumb_path)
-        except:
+        except Exception:
+            pass
+        if thumbnail is None:
             thumbnail = self.__make_thumbnail(width, height)
-            thumbnail.save(self._thumb_path)
+            thumbnail.save(self._thumb_path+'.new', format='jpeg')
+            os.rename(self._thumb_path+'.new',self._thumb_path)
 
         self.__thumbnail_cache = (thumbnail, (width, height))
         return thumbnail
