@@ -239,7 +239,7 @@ class BasicDoc(object):
 
         logger.info("%s : Updating label ([%s] -> [%s])"
                     % (str(self), old_label.name, new_label.name))
-        labels.append(new_label)
+        labels.add(new_label)
         with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
                          encoding='utf-8') as file_desc:
             for label in labels:
