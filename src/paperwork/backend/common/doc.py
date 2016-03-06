@@ -71,7 +71,7 @@ class BasicDoc(object):
         # When updating bayesian filters for label guessing,
         # we need to know the new label list, but also the *previous* label
         # list
-        self._previous_labels = self.labels[:]
+        self._previous_labels = self.labels.copy()
 
     def drop_cache(self):
         self.__cache = {}
@@ -166,15 +166,15 @@ class BasicDoc(object):
             An array of labels.Label objects
         """
         if 'labels' not in self.__cache:
-            labels = []
+            labels = set()
             try:
                 with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'r',
                                  encoding='utf-8') as file_desc:
                     for line in file_desc.readlines():
                         line = line.strip()
                         (label_name, label_color) = line.split(",", 1)
-                        labels.append(Label(name=label_name,
-                                            color=label_color))
+                        labels.add(Label(name=label_name,
+                                         color=label_color))
             except IOError:
                 pass
             self.__cache['labels'] = labels
