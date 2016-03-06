@@ -48,16 +48,19 @@ class Label(object):
     def __copy__(self):
         return Label(self.name, self.get_color_str())
 
-    def __label_cmp(self, other):
+    def __label_cmp(self, other, text_only=False):
         """
         Comparaison function. Can be used to sort labels alphabetically.
+
+        Labels are deemed equal if they have the same (or similar) text,
+        regardless of color.
         """
         if other is None:
             return -1
         label_name = strip_accents(self.name).lower()
         other_name = strip_accents(other.name).lower()
         cmp_r = cmp(label_name, other_name)
-        if cmp_r != 0:
+        if cmp_r != 0 or text_only:
             return cmp_r
         return cmp(self.get_color_str(), other.get_color_str())
 
@@ -68,7 +71,7 @@ class Label(object):
         return self.__label_cmp(other) > 0
 
     def __eq__(self, other):
-        return self.__label_cmp(other) == 0
+        return self.__label_cmp(other, True) == 0
 
     def __le__(self, other):
         return self.__label_cmp(other) <= 0
@@ -77,7 +80,7 @@ class Label(object):
         return self.__label_cmp(other) >= 0
 
     def __ne__(self, other):
-        return self.__label_cmp(other) != 0
+        return self.__label_cmp(other, True) != 0
 
     def __hash__(self):
         return hash(self.name)
