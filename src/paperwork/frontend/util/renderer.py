@@ -104,12 +104,13 @@ class LabelWidget(Gtk.DrawingArea):
     LABEL_TEXT_SHIFT = 2    # Shift a bit to fix valignment
     LABEL_CORNER_RADIUS = 5
 
-    def __init__(self, labels, highlight=False):
+    def __init__(self, labels, highlight=False, doc=None):
         Gtk.DrawingArea.__init__(self)
         self.labels = sorted(labels)
         self.highlight = highlight
         self.set_redraw_on_allocate(True)
         self.connect("draw", self.__on_draw)
+        self.__doc = doc
 
     @staticmethod
     def _rectangle_rounded(cairo_ctx, area, radius):
@@ -131,18 +132,30 @@ class LabelWidget(Gtk.DrawingArea):
         txt_offset = (self.LABEL_HEIGHT - self.LABEL_TEXT_SIZE) / 2 + self.LABEL_TEXT_SHIFT
         cairo_ctx.set_font_size(self.LABEL_TEXT_SIZE)
 
-        if not self.highlight:
-            cairo_ctx.select_font_face("", cairo.FONT_SLANT_NORMAL,
-                                       cairo.FONT_WEIGHT_NORMAL)
+        if self.highlight:
+            weight = cairo.FONT_WEIGHT_BOLD
         else:
-            cairo_ctx.select_font_face("", cairo.FONT_SLANT_NORMAL,
-                                       cairo.FONT_WEIGHT_BOLD)
+            weight = cairo.FONT_WEIGHT_NORMAL
 
         (x, y, h) = (0, 0, self.LABEL_HEIGHT)
         max_width = self.get_allocated_width()
+        if self.__doc is not None:
+            storage = self.__doc.storage
+        else:
+            storage = None
+        if storage is not None:
+            storage_label,storage_base = self.__doc.storage
+        else:
+            storage_label = None
 
         for label in self.labels:
             name = label.name
+            if storage_label is not None and label == storage_label:
+                name = "%s:%d" % (name,storage_base)
+                slant = cairo.FONT_SLANT_ITALIC
+            else:
+                slant = cairo.FONT_SLANT_NORMAL
+            cairo_ctx.select_font_face("", slant,weight)
 
             # get foreground text width
             (p_x1, p_y1, p_x2, p_y2, p_x3, p_y3) = cairo_ctx.text_extents(name)

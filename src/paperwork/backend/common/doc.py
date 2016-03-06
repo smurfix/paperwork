@@ -39,8 +39,9 @@ class BasicDoc(object):
     pages = []
     can_edit = False
     can_split = False
+    _storage = None
 
-    def __init__(self, docpath, docid=None):
+    def __init__(self, docpath, docid=None, label_store=None):
         """
         Basic init of common parts of doc.
 
@@ -48,6 +49,9 @@ class BasicDoc(object):
         content in __init__(). It would reduce in a huge performance loose
         and thread-safety issues. Load the content on-the-fly when requested.
         """
+        assert label_store is not None
+        self.label_store = label_store
+
         if docid is None:
             # new empty doc
             # we must make sure we use an unused id
@@ -127,21 +131,24 @@ class BasicDoc(object):
         """
         Delete the document. The *whole* document. There will be no survivors.
         """
-        logger.info("Destroying doc: %s" % self.path)
         rm_rf(self.path)
-        logger.info("Done")
         self.drop_cache()
 
-    def add_label(self, label):
+    def add_label(self, label, force=False):
         """
-        Add a label on the document.
+        Add a label to the document.
         """
-        if label in self.labels:
+
+        logger.info("SetStorageL 1 %s %s %s",self,self._storage,label)
+        if label in self.labels and not force:
             return
+        logger.info("SetStorageL 2 %s %s %s",self,self._storage,label)
         with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'a',
                          encoding='utf-8') as file_desc:
-            file_desc.write("%s,%s\n" % (label.name, label.get_color_str()))
-        self.drop_cache()
+            name = label.name
+            if self._storage is not None and self._storage[0] == label:
+                name = "%s::%d" % self._storage
+            file_desc.write("%s,%s\n" % (name, label.get_color_str()))
 
     def remove_label(self, to_remove):
         """
@@ -154,9 +161,10 @@ class BasicDoc(object):
         with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
                          encoding='utf-8') as file_desc:
             for label in labels:
-                file_desc.write("%s,%s\n" % (label.name,
-                                             label.get_color_str()))
-        self.drop_cache()
+                name = label.name
+                if self._storage is not None and self._storage[0] == label:
+                    name = "%s::%d" % self._storage
+                file_desc.write("%s,%s\n" % (name, label.get_color_str()))
 
     def __get_labels(self):
         """
@@ -167,17 +175,27 @@ class BasicDoc(object):
         """
         if 'labels' not in self.__cache:
             labels = set()
+            storage = self._storage
             try:
                 with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'r',
                                  encoding='utf-8') as file_desc:
                     for line in file_desc.readlines():
-                        line = line.strip()
-                        (label_name, label_color) = line.split(",", 1)
-                        labels.add(Label(name=label_name,
-                                         color=label_color))
+                        label_name,label_color = line.strip().split(',',1)
+                        if '::' in label_name:
+                            label_name,base = label_name.split('::')
+                            base = int(base)
+                        else:
+                            base = None
+                        label = Label(name=label_name, color=label_color)
+                        if label not in labels:
+                            labels.add(label)
+                        if base:
+                            self._storage = (label,base)
             except IOError:
                 pass
             self.__cache['labels'] = labels
+            if storage is not None:
+                self._storage = storage
         return self.__cache['labels']
 
     def __set_labels(self, labels):
@@ -187,7 +205,10 @@ class BasicDoc(object):
         with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
                          encoding='utf-8') as file_desc:
             for label in labels:
-                file_desc.write("%s,%s\n" % (label.name,
+                name = label.name
+                if self._storage and self._storage[0] == label:
+                    name = "%s::%d" % self._storage
+                file_desc.write("%s,%s\n" % (name,
                                              label.get_color_str()))
         self.__cache['labels'] = labels
 
@@ -243,9 +264,10 @@ class BasicDoc(object):
         with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'w',
                          encoding='utf-8') as file_desc:
             for label in labels:
-                file_desc.write("%s,%s\n" % (label.name,
-                                             label.get_color_str()))
-        self.drop_cache()
+                name = label.name
+                if self._storage is not None and self._storage[0] == label:
+                    name = "%s::%d" % self._storage
+                file_desc.write("%s,%s\n" % (name, label.get_color_str()))
 
     @staticmethod
     def get_export_formats():
@@ -407,4 +429,47 @@ class BasicDoc(object):
         GLib.spawn_async([b"xdg-open",self.path.encode('utf-8')], flags=GLib.SPAWN_SEARCH_PATH)
 
     def clone(self):
-        raise NotImplementedError()
+        return type(self)(self.path, self.docid, label_store=self.label_store)
+
+    def __get_storage(self):
+        return self._storage
+
+    def __set_storage(self, label, force=False):
+        if not force and self._storage and self._storage[0] == label:
+            return
+        base = self.label_store.target(label.name, self.nb_pages)
+        self._storage = (label, base)
+        self.add_label(label, force=True)
+        
+    def _update_storage(self,pages):
+        storage_label = self.storage_label
+        if storage_label is None:
+            return
+        storage_base = self.storage_base
+        # If we're at the end of this label's storage, extend
+        # if not, reallocate
+        if self.label_store.current(storage_label.name) == self.storage_base+self.nb_pages-pages:
+            self.label_store.target(storage_label.name,1)
+        else:
+            self.__set_storage(storage_label, force=True)
+
+    storage = property(__get_storage,__set_storage)
+
+    @property
+    def storage_label(self):
+        if self._storage is None:
+            return None
+        return self._storage[0]
+
+    @property
+    def storage_name(self):
+        if self._storage is None:
+            return None
+        return self._storage[0].name
+
+    @property
+    def storage_base(self):
+        if self._storage is None:
+            return None
+        return self._storage[1]
+

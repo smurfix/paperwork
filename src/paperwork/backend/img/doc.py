@@ -209,14 +209,14 @@ class ImgDoc(BasicDoc):
     can_edit = True
     doctype = u"Img"
 
-    def __init__(self, docpath, docid=None):
+    def __init__(self, *args,**kwargs):
         """
         Arguments:
             docpath --- For an existing document, the path to its folder. For
                 a new one, the rootdir of all documents
             docid --- Document Id (ie folder name). Use None for a new document
         """
-        BasicDoc.__init__(self, docpath, docid)
+        BasicDoc.__init__(self, *args,**kwargs)
         self.__pages = None
 
     def clone(self):
@@ -325,6 +325,7 @@ class ImgDoc(BasicDoc):
         page.img = img
         page.boxes = boxes
         self.drop_cache()
+        self._update_storage(1)
         return self.pages[-1]
 
     def insert_page(self, img, boxes, page_nb):
@@ -346,6 +347,7 @@ class ImgDoc(BasicDoc):
         page.img = img
         page.boxes = boxes
         self.drop_cache()
+        self._update_storage(1)
         return self.pages[page_nb]
 
 

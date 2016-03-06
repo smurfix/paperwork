@@ -1,5 +1,6 @@
 from copy import copy
 import datetime
+from functools import partial
 import gettext
 import logging
 
@@ -553,7 +554,7 @@ class DocList(object):
             # keep the thumbnails in cache
             'thumbnails': {}  # docid: pixbuf
         }
-        self.new_doc = ImgDoc(config['workdir'].value)
+        self.new_doc = ImgDoc(config['workdir'].value, label_store=main_win.label_store)
 
         self.job_factories = {
             'doc_thumbnailer': JobFactoryDocThumbnailer(self),
@@ -791,7 +792,7 @@ class DocList(object):
         internalbox.add(docname)
 
         # doc labels
-        labels = LabelWidget(doc.labels)
+        labels = LabelWidget(doc.labels, doc=doc)
         labels.set_size_request(170, 10)
         internalbox.add(labels)
 
@@ -1063,7 +1064,7 @@ class DocPropertiesPanel(object):
         }
 
         labels = sorted(main_window.docsearch.label_list)
-        self.labels = {label: (None, None) for label in labels}
+        self.labels = {label: (None, None, None) for label in labels}
 
         default_buf = self.widgets['extra_keywords_default_buffer']
         self.default_extra_text = self.get_text_from_buffer(default_buf)
@@ -1113,7 +1114,7 @@ class DocPropertiesPanel(object):
         logger.info("Checking for new labels")
         doc_labels = sorted(self.doc.labels)
         new_labels = []
-        for (label, (check_button, edit_button)) in self.labels.iteritems():
+        for (label, (check_button, edit_button, label_widget)) in self.labels.iteritems():
             if check_button.get_active():
                 new_labels.append(label)
         new_labels.sort()
@@ -1184,6 +1185,7 @@ class DocPropertiesPanel(object):
     def _readd_label_widgets(self, labels):
         label_widgets = {}
         self.widgets['labels'].freeze_child_notify()
+        storage_label = self.doc.storage_label
         try:
             # Add a row for each label
             for label in labels:
@@ -1197,10 +1199,13 @@ class DocPropertiesPanel(object):
                 check_button.set_relief(Gtk.ReliefStyle.NONE)
                 check_style = check_button.get_style_context()
                 check_style.remove_class("button")
-                check_button.connect("clicked", self.on_check_button_clicked)
+                check_button.connect("clicked", partial(self.on_check_button_clicked,label=label))
+                check_button.connect("button-release-event", partial(self.on_button_released,label=label))
                 label_box.add(check_button)
 
                 label_widget = Gtk.Label.new(label.name)
+                if storage_label is not None and label == storage_label:
+                    label_widget.set_markup("<i>%s:%s</i>" % (GObject.markup_escape_text(label.name),self.doc.storage_base))
                 label_widget.set_halign(Gtk.Align.START)
                 label_box.add(label_widget)
                 label_box.child_set_property(label_widget, 'expand', True)
@@ -1209,9 +1214,12 @@ class DocPropertiesPanel(object):
                 edit_button = LabelColorButton()
                 edit_button.set_rgba(label.color)
                 edit_button.set_relief(Gtk.ReliefStyle.NONE)
-                edit_button.connect("clicked", self.on_label_button_clicked)
+                edit_button.connect("clicked", partial(self.on_label_button_clicked,label=label))
+                edit_button.connect("button-release-event", partial(self.on_button_released,label=label))
                 ActionEditLabel(self.__main_win, self).connect([edit_button])
                 label_box.add(edit_button)
+
+                label_box.connect("button-release-event", partial(self.on_button_released,label=label))
 
                 rowbox = Gtk.ListBoxRow()
                 rowbox.add(label_box)
@@ -1219,7 +1227,7 @@ class DocPropertiesPanel(object):
                 rowbox.show_all()
                 self.widgets['labels'].add(rowbox)
 
-                label_widgets[label] = (check_button, edit_button)
+                label_widgets[label] = (check_button, edit_button, label_widget)
 
             # The last row allows to add new labels
             self.widgets['labels'].add(self.widgets['row_add_label'])
@@ -1229,17 +1237,43 @@ class DocPropertiesPanel(object):
                 "row-activated", self.on_row_activated)
             self.widgets['labels'].thaw_child_notify()
 
-    def on_check_button_clicked(self, check_button):
+    def on_button_released(self, _, event, label=None):
+        if event.button != 3:
+            return False
+        # set storage to this
+        (check_button, edit_button, label_widget) = self.labels[label]
+        storage_label = self.doc.storage_label
+        if storage_label is not None:
+            old_label_text = self.labels[storage_label][2]
+            old_label_text.set_text(storage_label.name)
+        checkmark = Gtk.Image.new_from_icon_name("object-select-symbolic",
+                                                 Gtk.IconSize.MENU)
+        check_button.set_image(checkmark)
+        self.doc.storage = label
+        label_widget.set_markup("<i>%s:%s</i>" % (GObject.markup_escape_text(label.name),self.doc.storage_base))
+        return True
+
+    def on_check_button_clicked(self, clicked_button, label=None):
         """
         Toggle the image displayed into the check_button
         """
+        event = Gtk.get_current_event()
+        storage_label = self.doc.storage_label
+        # TODO: do that correctly
+        (check_button, edit_button, label_widget) = self.labels[label]
+        checkmark = Gtk.Image.new_from_icon_name("object-select-symbolic",
+                                                 Gtk.IconSize.MENU)
+
+        if storage_label is not None and storage_label == label:
+            clicked_button.set_image(checkmark)
+            return # cannot unclick
+
+        # "clicked" event is emitted when initializing an active button
         if check_button.get_active():
-            checkmark = Gtk.Image.new_from_icon_name("object-select-symbolic",
-                                                     Gtk.IconSize.MENU)
-            check_button.set_image(checkmark)
+            clicked_button.set_image(checkmark)
         else:
             empty_image = Gtk.Image()
-            check_button.set_image(empty_image)
+            clicked_button.set_image(empty_image)
 
     def on_label_button_clicked(self, button):
         """
@@ -1266,15 +1300,20 @@ class DocPropertiesPanel(object):
     def refresh_label_list(self):
         all_labels = sorted(self.__main_win.docsearch.label_list)
         current_labels = sorted(self.labels.keys())
-        if all_labels != current_labels:
+        if all_labels != current_labels or self.doc.storage_label:
             self._clear_label_list()
             self._readd_label_widgets(all_labels)
+        storage_label = self.doc.storage_label
         for label in self.labels:
             if self.doc:
                 active = label in self.doc.labels
             else:
                 active = False
             self.labels[label][0].set_active(active)
+            if storage_label is not None and label == storage_label:
+                self.labels[label][2].set_markup("<i>%s:%s</i>" % (GObject.markup_escape_text(label.name),self.doc.storage_base))
+            else:
+                self.labels[label][2].set_text(label.name)
 
     def on_keywords_focus_in(self, textarea, event):
         extra_style = self.widgets['extra_keywords'].get_style_context()

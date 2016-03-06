@@ -107,12 +107,9 @@ class PdfDoc(BasicDoc):
     doctype = u"PDF"
     _pages = None
 
-    def __init__(self, docpath, docid=None):
-        BasicDoc.__init__(self, docpath, docid)
+    def __init__(self, *args,**kwargs):
+        BasicDoc.__init__(self, *args,**kwargs)
         self._pdf = None
-
-    def clone(self):
-        return PdfDoc(self.path, self.docid)
 
     def __get_last_mod(self):
         pdfpath = os.path.join(self.path, PDF_FILENAME)
@@ -228,10 +225,6 @@ class PdfDoc(BasicDoc):
         pdir = os.path.abspath(os.path.join(self.path,os.path.pardir))
         new_docs = []
 
-        new_doc = PdfDoc(pdir)
-        os.mkdir(new_doc.path)
-        new_doc.labels = self.labels[:]
-
         pdf_r_name = os.path.join(self.path,PDF_FILENAME)
         pdf_a_name = os.path.join(self.path,PDF_FILENAME+'.new')
         pdf_r = pdfrw.PdfReader(pdf_r_name)
@@ -243,9 +236,9 @@ class PdfDoc(BasicDoc):
             if page.page_nb in pages:
                 dest.write(dest_path)
 
-                new_doc = PdfDoc(pdir)
+                new_doc = PdfDoc(pdir, label_store=self.label_store)
                 os.mkdir(new_doc.path)
-                new_doc.labels = self.labels[:]
+                new_doc.labels = self.labels.copy()
                 dest = pdf_b = pdfrw.PdfWriter()
                 dest_path = os.path.join(new_doc.path,PDF_FILENAME)
                 new_docs.append(new_doc)

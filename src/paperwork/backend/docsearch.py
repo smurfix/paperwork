@@ -343,7 +343,7 @@ class DocSearch(object):
     )
 
     def __init__(self, rootdir, indexdir=None,
-                 callback=dummy_progress_cb):
+                 callback=dummy_progress_cb, label_store=None):
         """
         Index files in rootdir (see constructor)
 
@@ -356,6 +356,8 @@ class DocSearch(object):
                 document (only if step == DocSearch.INDEX_STEP_READING): file
                     being read
         """
+        assert(label_store)
+        self.label_store = label_store
         self.rootdir = rootdir
         if indexdir is None:
             base_data_dir = os.getenv(
@@ -485,7 +487,7 @@ class DocSearch(object):
             # if we already know the doc type name
             for (is_doc_type, doc_type_name_b, doc_type) in DOC_TYPE_LIST:
                 if doc_type_name_b == doc_type_name:
-                    doc = doc_type(docpath, docid)
+                    doc = doc_type(docpath, docid, label_store=self.label_store)
             if not doc:
                 logger.warning(
                     ("Warning: unknown doc type found in the index: %s") %
@@ -495,7 +497,7 @@ class DocSearch(object):
         if not doc:
             for (is_doc_type, doc_type_name, doc_type) in DOC_TYPE_LIST:
                 if is_doc_type(docpath):
-                    doc = doc_type(docpath, docid)
+                    doc = doc_type(docpath, docid, label_store=self.label_store)
                     break
         if not doc:
             logger.warning("Warning: unknown doc type for doc '%s'" % docid)

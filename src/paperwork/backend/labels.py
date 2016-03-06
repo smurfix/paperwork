@@ -18,6 +18,7 @@
 Code to manage document labels
 """
 import os
+import pickle
 
 from gi.repository import Gdk
 import simplebayes
@@ -260,3 +261,33 @@ class LabelGuesser(object):
             if yes * self.WEIGHT_YES > no * self.WEIGHT_NO:
                 label_names.add(label_name)
         return label_names
+
+
+class LabelStorage(object):
+    """This maintains an incremented number per name.
+    The idea is to associate labels, thus to easily remember where the physical
+    document is stored."""
+
+    def __init__(self, indexdir = None):
+        if indexdir is None:
+            base_data_dir = os.getenv(
+                "XDG_DATA_HOME",
+                os.path.expanduser("~/.local/share")
+            )
+            indexdir = os.path.join(base_data_dir, "paperwork")
+        self.stores_path = os.path.join(indexdir, "labels")
+        if os.access(self.stores_path, os.F_OK):
+            with open(self.stores_path,'rb') as f:
+                self.stores = pickle.load(f)
+        else:
+            self.stores = {}
+
+    def target(self, name, nr_pages):
+        new_page = self.stores.get(name,1)
+        self.stores[name] = new_page+nr_pages
+        with open(self.stores_path,'wb') as f:
+            pickle.dump(self.stores, f)
+        return new_page
+
+    def current(self, name):
+        return self.stores.get(name,0)

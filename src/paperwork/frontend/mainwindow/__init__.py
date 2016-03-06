@@ -63,6 +63,7 @@ from paperwork.backend.common.page import BasicPage
 from paperwork.backend.common.page import DummyPage
 from paperwork.backend.docsearch import DocSearch
 from paperwork.backend.docsearch import DummyDocSearch
+from paperwork.backend.labels import LabelStorage
 
 
 _ = gettext.gettext
@@ -102,9 +103,10 @@ class JobIndexLoader(Job):
     can_stop = True
     priority = 100
 
-    def __init__(self, factory, job_id, config):
+    def __init__(self, factory, job_id, config, label_store):
         Job.__init__(self, factory, job_id)
         self.__config = config
+        self.__label_store = label_store
         self.started = False
         self.done = False
 
@@ -150,7 +152,8 @@ class JobIndexLoader(Job):
                 return
 
             docsearch = DocSearch(self.__config['workdir'].value,
-                                  callback=self.__progress_cb)
+                                  callback=self.__progress_cb,
+                                  label_store=self.__label_store)
 
             if not self.can_run:
                 return
@@ -177,7 +180,8 @@ class JobFactoryIndexLoader(JobFactory):
         self.__config = config
 
     def make(self):
-        job = JobIndexLoader(self, next(self.id_generator), self.__config)
+        job = JobIndexLoader(self, next(self.id_generator), self.__config,
+                             label_store=self.__main_window.label_store)
         job.connect('index-loading-start',
                     lambda job: GLib.idle_add(
                         self.__main_window.on_index_loading_start_cb, job))
@@ -1923,6 +1927,7 @@ class MainWindow(object):
 
         self.window = self.__init_window(widget_tree, config)
 
+        self.label_store = LabelStorage()
         self.doclist = DocList(self, config, widget_tree)
 
         self.__config = config
