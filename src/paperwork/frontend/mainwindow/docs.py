@@ -1168,7 +1168,7 @@ class DocPropertiesPanel(object):
             reload_list=True
         )
         self.__main_win.schedulers['main'].schedule(job)
-        self.__main_win.doc = old_doc
+        self.__main_win.doc = self.doc = old_doc
 
     def _clear_label_list(self):
         self.widgets['labels'].freeze_child_notify()
