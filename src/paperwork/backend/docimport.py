@@ -51,11 +51,11 @@ class SinglePdfImporter(object):
         return file_uri.lower().endswith(".pdf")
 
     @staticmethod
-    def import_doc(file_uri, docsearch, current_doc=None):
+    def import_doc(file_uri, docsearch, current_doc=None, label_store=None):
         """
         Import the specified PDF file
         """
-        doc = PdfDoc(docsearch.rootdir)
+        doc = PdfDoc(docsearch.rootdir, label_store=label_store)
         logger.info("Importing doc '%s' ..." % file_uri)
         doc.import_pdf(file_uri)
         return ([doc], None, True)
@@ -107,7 +107,7 @@ class MultiplePdfImporter(object):
         return False
 
     @staticmethod
-    def import_doc(file_uri, docsearch, current_doc=None):
+    def import_doc(file_uri, docsearch, current_doc=None, label_store=None):
         """
         Import the specified PDF files
         """
@@ -131,7 +131,7 @@ class MultiplePdfImporter(object):
                                                password=None)
             except Exception:
                 continue
-            doc = PdfDoc(docsearch.rootdir)
+            doc = PdfDoc(docsearch.rootdir, label_store=label_store)
             doc.import_pdf(child.get_uri())
             docs.append(doc)
             idx += 1
@@ -166,7 +166,7 @@ class SingleImageImporter(object):
         return False
 
     @staticmethod
-    def import_doc(file_uri, docsearch, current_doc=None):
+    def import_doc(file_uri, docsearch, current_doc=None, label_store=None):
         """
         Import the specified image
         """
