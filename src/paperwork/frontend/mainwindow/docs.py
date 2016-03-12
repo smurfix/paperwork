@@ -1248,6 +1248,7 @@ class DocPropertiesPanel(object):
             old_label_text.set_text(storage_label.name)
         checkmark = Gtk.Image.new_from_icon_name("object-select-symbolic",
                                                  Gtk.IconSize.MENU)
+        check_button.set_active(True)
         check_button.set_image(checkmark)
         self.doc.storage = label
         label_widget.set_markup("<i>%s:%s</i>" % (GObject.markup_escape_text(label.name),self.doc.storage_base))
