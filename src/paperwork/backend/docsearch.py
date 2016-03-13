@@ -200,7 +200,7 @@ class DocDirExaminer(GObject.GObject):
         for old_doc in old_doc_list:
             # Will be a document with 0 pages
             docpath = os.path.join(self.docsearch.rootdir, old_doc)
-            on_doc_deleted(ImgDoc(docpath, old_doc))
+            on_doc_deleted(ImgDoc(docpath, old_doc, label_store=self.docsearch.label_store))
 
         progress_cb(1, 1, DocSearch.INDEX_STEP_CHECKING)
 
