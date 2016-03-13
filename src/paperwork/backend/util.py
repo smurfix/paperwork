@@ -198,7 +198,10 @@ def rm_rf(path):
                 dirpath = os.path.join(root, dirname)
                 logger.info("Deleting dir %s" % dirpath)
                 os.rmdir(dirpath)
-        os.rmdir(path)
+        try:
+            os.rmdir(path)
+        except (OSError,IOError):
+            logger.exception("Could not remove directory: %s", path)
 
 
 def surface2image(surface):

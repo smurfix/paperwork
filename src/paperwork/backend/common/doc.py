@@ -148,8 +148,9 @@ class BasicDoc(object):
                 if self._storage is not None and self._storage[0] == label:
                     name = "%s::%d" % self._storage
                 file_desc.write("%s,%s\n" % (name, label.get_color_str()))
-        except OSError:
-            self._write_labels()
+        except (OSError,IOError):
+            self.labels.add(label)
+            self._write_labels(self.labels)
 
     def remove_label(self, to_remove):
         """
