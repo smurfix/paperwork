@@ -139,10 +139,8 @@ class BasicDoc(object):
         Add a label to the document.
         """
 
-        logger.info("SetStorageL 1 %s %s %s",self,self._storage,label)
         if label in self.labels and not force:
             return
-        logger.info("SetStorageL 2 %s %s %s",self,self._storage,label)
         try:
             with codecs.open(os.path.join(self.path, self.LABEL_FILE), 'a',
                             encoding='utf-8') as file_desc:
