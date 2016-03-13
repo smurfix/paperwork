@@ -344,8 +344,6 @@ class JobIndexUpdater(Job):
         self.upd_docs = upd_docs
         self.del_docs = del_docs
 
-        self.update_only = len(new_docs) == 0 and len(del_docs) == 0
-
         self.optimize = optimize
         self.index_updater = None
         self.total = (len(self.new_docs) + len(self.upd_docs) +
@@ -465,6 +463,7 @@ class JobFactoryIndexUpdater(JobFactory):
                     GLib.idle_add(self.__main_win.on_index_update_end_cb,
                                   updater))
         if reload_list:
+            # TODO modify the list instead of rebuilding everything
             job.connect('index-update-end',
                         lambda updater:
                         GLib.idle_add(self.__main_win.refresh_doc_list))
@@ -1418,6 +1417,7 @@ class ActionDeletePage(SimpleAction):
         if len(doc.pages) > 0:
             self.__main_win.refresh_docs({doc})
         else:
+            # TODO simply delete this document
             self.__main_win.refresh_doc_list()
         self.__main_win.show_doc(self.__main_win.doc, force_refresh=True)
 
@@ -1460,18 +1460,19 @@ class ActionSplitPage(SimpleAction):
             new_docs = [new_docs]
         new_doc = new_docs[0]
         new_docs = set(new_docs)
-        new_docs.add(doc)
         logger.info("Split")
         doc.drop_cache()
         self.__main_win.page = None
         set_widget_state(self.__main_win.need_page_widgets, False)
+        self.__main_win.refresh_docs({doc})
         self.__main_win.refresh_docs(new_docs)
-        self.__main_win.refresh_doc_list()
-        self.__main_win.show_doc(new_doc, force_refresh=True)
+        #self.__main_win.show_doc(new_doc, force_refresh=True)
 
         job = self.__main_win.job_factories['index_updater'].make(
             self.__main_win.docsearch, upd_docs={doc}, new_docs=new_docs, optimize=False)
         self.__main_win.schedulers['index'].schedule(job)
+
+        GLib.idle_add(self.__main_win.img['canvas'].redraw)
 
 
 class ActionRedoOCR(SimpleAction):
@@ -2479,12 +2480,15 @@ class MainWindow(object):
         self.set_progression(src, 0.0, None)
 
     def on_index_update_start_cb(self, src):
-        self.doclist.show_loading()
+        #self.doclist.show_loading()
         self.set_progression(src, 0.0, None)
 
     def on_index_update_write_cb(self, src):
-        if src.update_only:
-            self.doclist.refresh()
+        for d in src.del_docs:
+            self.doclist.drop_doc(d)
+        for d in src.new_docs:
+            self.doclist.insert_doc(d)
+        self.doclist.refresh_docs(src.upd_docs)
 
     def on_index_update_end_cb(self, src):
         self.schedulers['main'].cancel_all(
@@ -2492,7 +2496,7 @@ class MainWindow(object):
 
         self.set_progression(src, 0.0, None)
         gc.collect()
-        self.doclist.refresh()
+        #self.doclist.refresh()
 
     def on_search_start_cb(self):
         self.search_field.override_color(Gtk.StateFlags.NORMAL, None)

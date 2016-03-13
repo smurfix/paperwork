@@ -177,15 +177,8 @@ class JobScheduler(object):
             try:
                 self._active_job.do()
             except Exception, exc:
-                logger.error("===> Job %s raised an exception: %s: %s"
-                             % (str(self._active_job),
-                                type(exc), str(exc)))
-                idx = 0
-                for stack_el in traceback.extract_tb(sys.exc_info()[2]):
-                    logger.error("%2d: %20s: L%5d: %s"
-                                 % (idx, stack_el[0],
-                                    stack_el[1], stack_el[2]))
-                    idx += 1
+                logger.exception("===> Job %s raised an exception", self._active_job)
+
                 logger.error("---> Job %s was started by:"
                              % (str(self._active_job)))
                 idx = 0

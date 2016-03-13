@@ -369,7 +369,7 @@ class ActionOpenSelectedDocument(SimpleAction):
         row = doclist.get_selected_row()
         if row is None:
             return
-        docid = self.__doclist.model['by_row'][row]
+        docid = row._paperwork_docid
         doc = self.__main_win.docsearch.get_doc_from_docid(docid, inst=False)
         if doc is None:
             # assume new doc
@@ -511,8 +511,10 @@ class ActionDeleteDoc(SimpleAction):
         self.__main_win.schedulers['main'].schedule(job)
 
     def _on_doc_deleted_from_index(self, doc):
+        doclist = self.__main_win.doclist
+        rowbox = doclist.model['by_id'][doc.docid]
+        doclist.gui['list'].remove(rowbox)
         doc.destroy()
-        self.__main_win.refresh_doc_list()
 
 
 class DocList(object):
@@ -550,7 +552,6 @@ class DocList(object):
 
         self.model = {
             'has_new': False,
-            'by_row': {},  # Gtk.ListBoxRow: docid
             'by_id': {},  # docid: Gtk.ListBoxRow
             # keep the thumbnails in cache
             'thumbnails': {}  # docid: pixbuf
@@ -620,14 +621,14 @@ class DocList(object):
         if end_idx < start_idx:
             logger.warn("Thumbnailing: End_idx (%d) < start_idx (%d) !?"
                         % (end_idx, start_idx))
-            end_idx = 99999999
+            return
 
         documents = []
         for row_idx in xrange(start_idx, end_idx + 1):
             row = self.gui['list'].get_row_at_index(row_idx)
             if row is None:
                 break
-            docid = self.model['by_row'][row]
+            docid = row._paperwork_docid
             if docid in self.model['thumbnails']:
                 # already loaded
                 continue
@@ -653,11 +654,11 @@ class DocList(object):
 
     def _on_drag_motion(self, canvas, drag_context, x, y, time):
         target_row = self.gui['list'].get_row_at_y(y)
-        if not target_row or target_row not in self.model['by_row']:
+        if not target_row or not hasattr(target_row,'_paperwork_docid'):
             self._on_drag_leave(canvas, drag_context, time)
             return False
 
-        target_docid = self.model['by_row'][target_row]
+        target_docid = target_row._paperwork_docid
         try:
             target_doc = self.__main_win.docsearch.get(target_docid)
         except KeyError:
@@ -681,12 +682,12 @@ class DocList(object):
         page_id = data.get_text()
 
         target_row = self.gui['list'].get_row_at_y(y)
-        if not target_row or target_row not in self.model['by_row']:
+        if not target_row or not hasattr(target_row, '_paperwork_docid'):
             logger.warn("Drag-n-drop: Invalid doc row ?!")
             drag_context.finish(False, False, time)  # success = False
             return
 
-        target_docid = self.model['by_row'][target_row]
+        target_docid = target_row._paperwork_docid
         logger.info("Drag-n-drop data received on doc list: [%s] --> [%s]"
                     % (page_id, target_docid))
 
@@ -744,15 +745,28 @@ class DocList(object):
 
     def insert_new_doc(self):
         # append a new document to the list
-        doc = self.get_new_doc()
         self.model['has_new'] = True
-        rowbox = Gtk.ListBoxRow()
-        self._make_listboxrow_doc_widget(doc, rowbox, False)
-        self.model['by_row'][rowbox] = doc.docid
-        self.model['by_id'][doc.docid] = rowbox
-        self.gui['list'].insert(rowbox, 0)
+        doc = self.get_new_doc()
+        rowbox = self.insert_doc(doc, top=True)
         if self.__main_win.doc.is_new:
             self.gui['list'].select_row(rowbox)
+
+    def insert_doc(self, doc, top=False):
+        logger.info("*** insert %s",doc.docid)
+        rowbox = Gtk.ListBoxRow()
+        self._make_listboxrow_doc_widget(doc, rowbox, False)
+        rowbox._paperwork_docid = doc.docid
+        self.model['by_id'][doc.docid] = rowbox
+        self.gui['list'].insert(rowbox, 0 if top else 1)
+        if self.__main_win.doc is doc:
+            # this happens when renaming
+            self.select_doc(doc)
+        return rowbox
+
+    def drop_doc(self, doc):
+        logger.info("*** delete %s",doc.docid)
+        rowbox = self.model['by_id'].pop(doc.docid)
+        self.gui['list'].remove(rowbox)
 
     def clear(self):
         self.gui['list'].freeze_child_notify()
@@ -763,7 +777,6 @@ class DocList(object):
                     break
                 self.gui['list'].remove(row)
 
-            self.model['by_row'] = {}
             self.model['by_id'] = {}
             self.model['has_new'] = False
         finally:
@@ -875,7 +888,7 @@ class DocList(object):
                 rowbox = Gtk.ListBoxRow()
                 selected = (doc.docid == self.__main_win.doc.docid)
                 self._make_listboxrow_doc_widget(doc, rowbox, selected)
-                self.model['by_row'][rowbox] = doc.docid
+                rowbox._paperwork_docid = doc.docid
                 self.model['by_id'][doc.docid] = rowbox
                 self.gui['list'].add(rowbox)
         finally:
@@ -884,11 +897,8 @@ class DocList(object):
         if need_new_doc:
             self.insert_new_doc()
 
-        if (self.__main_win.doc
-                and self.__main_win.doc.docid in self.model['by_id']):
-            row = self.model['by_id'][self.__main_win.doc.docid]
-            self.gui['list'].select_row(row)
-            GLib.idle_add(self._scroll_to, row)
+        if self.__main_win.doc:
+            self.select_doc(self.__main_win.doc)
 
         # remove the spinner, put the list instead
         self.gui['loading'].remove_all_drawers()
@@ -905,6 +915,7 @@ class DocList(object):
             docs --- Array of Doc
         """
         for doc in docs:
+            logger.info("*** refresh %s",doc.docid)
             if doc.docid in self.model['by_id']:
                 rowbox = self.model['by_id'][doc.docid]
                 self._make_listboxrow_doc_widget(
@@ -912,9 +923,7 @@ class DocList(object):
                     doc.docid == self.__main_win.doc.docid
                 )
             else:
-                # refresh the whole list for now, it's much simpler
-                self.refresh()
-                return
+                self.insert_doc(doc)
 
         # and rethumbnail what must be
         docs = [x for x in docs]
@@ -942,6 +951,9 @@ class DocList(object):
         self.__main_win.schedulers['main'].schedule(job)
 
     def select_doc(self, doc=None, offset=None):
+        if doc.docid not in self.model['by_id']:
+            return
+
         assert(doc is not None or offset is not None)
         if doc is not None:
             row = self.model['by_id'][doc.docid]
@@ -953,7 +965,7 @@ class DocList(object):
             row = self.gui['list'].get_row_at_index(row_index)
             if not row:
                 return
-        self.gui.select_row(row)
+        self.gui['list'].select_row(row)
 
     def _on_size_allocate(self):
         visible = self.gui['scrollbars'].get_allocation()
@@ -1109,12 +1121,11 @@ class DocPropertiesPanel(object):
 
         # Labels
         logger.info("Checking for new labels")
-        doc_labels = sorted(self.doc.labels)
-        new_labels = []
+        doc_labels = self.doc.labels
+        new_labels = set()
         for (label, (check_button, edit_button, label_widget)) in self.labels.iteritems():
             if check_button.get_active():
-                new_labels.append(label)
-        new_labels.sort()
+                new_labels.add(label)
         if doc_labels != new_labels:
             logger.info("Apply new labels")
             self.doc.labels = new_labels
@@ -1138,7 +1149,7 @@ class DocPropertiesPanel(object):
             if has_changed:
                 self.__main_win.upd_index({self.doc})
         else:
-            old_doc = self.doc.clone()
+            old_doc = self.doc ## no cloning
             # this case is more tricky --> del + new
             job = self.__main_win.job_factories['index_updater'].make(
                 self.__main_win.docsearch,
@@ -1157,15 +1168,28 @@ class DocPropertiesPanel(object):
         self.__main_win.refresh_header_bar()
 
     def __rename_doc(self, old_doc, new_doc_date):
+        doclist = self.__main_win.doclist
+        doclist.drop_doc(old_doc)
         old_doc.date = new_doc_date
+        # this renames the directory and allocates a new docid
+        # insert happens after indexing
+
         job = self.__main_win.job_factories['index_updater'].make(
             self.__main_win.docsearch,
             new_docs={old_doc},
             optimize=False,
-            reload_list=True
+            reload_list=False # True
+        )
+        job.connect(
+            "index-update-end", lambda job:
+            GLib.idle_add(self.__rename_doc2, old_doc)
         )
         self.__main_win.schedulers['main'].schedule(job)
-        self.__main_win.doc = self.doc = old_doc
+
+    def __rename_doc2(self, old_doc):
+        logger.info("*** selecting old doc %s", old_doc.docid)
+        doclist = self.__main_win.doclist
+        doclist.select_doc(old_doc)
 
     def _clear_label_list(self):
         self.widgets['labels'].freeze_child_notify()
@@ -1237,6 +1261,7 @@ class DocPropertiesPanel(object):
     def on_button_released(self, _, event, label=None):
         if event.button != 3:
             return False
+
         # set storage to this
         (check_button, edit_button, label_widget) = self.labels[label]
         storage_label = self.doc.storage_label
@@ -1257,14 +1282,13 @@ class DocPropertiesPanel(object):
         """
         event = Gtk.get_current_event()
         storage_label = self.doc.storage_label
-        # TODO: do that correctly
         (check_button, edit_button, label_widget) = self.labels[label]
         checkmark = Gtk.Image.new_from_icon_name("object-select-symbolic",
                                                  Gtk.IconSize.MENU)
 
         if storage_label is not None and storage_label == label:
             clicked_button.set_image(checkmark)
-            return # cannot unclick
+            return # cannot unclick; setting is for initial
 
         # "clicked" event is emitted when initializing an active button
         if check_button.get_active():
@@ -1367,4 +1391,6 @@ class DocPropertiesPanel(object):
         self.__main_win.set_search_availability(True)
         self.__main_win.set_mouse_cursor("Normal")
         self.__main_win.refresh_label_list()
-        self.__main_win.refresh_doc_list()
+        #self.__main_win.refresh_doc_list()
+        self.__main_win.refresh_docs({self.doc}, redo_thumbnails=False)
+
