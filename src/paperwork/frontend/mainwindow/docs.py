@@ -764,7 +764,6 @@ class DocList(object):
         return rowbox
 
     def drop_doc(self, doc):
-        logger.info("*** delete %s",doc.docid)
         try:
             rowbox = self.model['by_id'].pop(doc.docid)
         except KeyError:
@@ -918,10 +917,7 @@ class DocList(object):
         Arguments:
             docs --- Array of Doc
         """
-        if not docs:
-            return
         for doc in docs:
-            logger.info("*** refresh %s",doc.docid)
             if doc.docid in self.model['by_id']:
                 rowbox = self.model['by_id'][doc.docid]
                 self._make_listboxrow_doc_widget(
@@ -931,11 +927,12 @@ class DocList(object):
             else:
                 self.insert_doc(doc)
 
-        # and rethumbnail what must be
-        docs = [x for x in docs]
-        logger.info("Will redo thumbnails: %s" % str(docs))
-        job = self.job_factories['doc_thumbnailer'].make(docs)
-        self.__main_win.schedulers['main'].schedule(job)
+        # and rethumbnail if necessary
+        if redo_thumbnails and docs:
+            docs = [x for x in docs]
+            logger.info("Will redo thumbnails: %s" % str(docs))
+            job = self.job_factories['doc_thumbnailer'].make(docs)
+            self.__main_win.schedulers['main'].schedule(job)
 
     def refresh(self):
         """
@@ -1193,9 +1190,9 @@ class DocPropertiesPanel(object):
         self.__main_win.schedulers['main'].schedule(job)
 
     def __rename_doc2(self, old_doc):
-        logger.info("*** selecting old doc %s", old_doc.docid)
         doclist = self.__main_win.doclist
-        doclist.select_doc(old_doc)
+        if self.__main_win.doc is old_doc:
+            doclist.select_doc(old_doc)
 
     def _clear_label_list(self):
         self.widgets['labels'].freeze_child_notify()

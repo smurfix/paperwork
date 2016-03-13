@@ -1419,7 +1419,8 @@ class ActionDeletePage(SimpleAction):
         self.__main_win.page = None
         set_widget_state(self.__main_win.need_page_widgets, False)
         if len(doc.pages) > 0:
-            self.__main_win.refresh_docs({doc})
+            self.__main_win.refresh_docs({doc}, redo_thumbnails=False)
+            # assume that the document's page deleter has move the thumbs
         else:
             # TODO simply delete this document
             self.__main_win.refresh_doc_list()
@@ -1468,8 +1469,9 @@ class ActionSplitPage(SimpleAction):
         doc.drop_cache()
         self.__main_win.page = None
         set_widget_state(self.__main_win.need_page_widgets, False)
-        self.__main_win.refresh_docs({doc})
-        self.__main_win.refresh_docs(new_docs)
+        self.__main_win.refresh_docs({doc}, redo_thumbnails=False)
+        # assume that the splitter has moved the thumbs
+        self.__main_win.refresh_docs(new_docs, redo_thumbnails=False)
         #self.__main_win.show_doc(new_doc, force_refresh=True)
 
         job = self.__main_win.job_factories['index_updater'].make(
@@ -2492,7 +2494,7 @@ class MainWindow(object):
             self.doclist.drop_doc(d)
         for d in src.known_new_docs:
             self.doclist.insert_doc(d)
-        self.doclist.refresh_docs(src.known_upd_docs)
+        self.doclist.refresh_docs(src.known_upd_docs, redo_thumbnails=False)
 
     def on_index_update_end_cb(self, src):
         self.schedulers['main'].cancel_all(
