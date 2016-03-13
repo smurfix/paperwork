@@ -1478,7 +1478,8 @@ class ActionSplitPage(SimpleAction):
             self.__main_win.docsearch, upd_docs={doc}, new_docs=new_docs, optimize=False)
         self.__main_win.schedulers['index'].schedule(job)
 
-        GLib.idle_add(self.__main_win.img['canvas'].redraw)
+        self.__main_win.show_doc(doc, force_refresh=True)
+        #GLib.idle_add(self.__main_win.img['canvas'].redraw)
 
 
 class ActionRedoOCR(SimpleAction):
