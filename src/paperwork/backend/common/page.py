@@ -90,10 +90,10 @@ class PageExporter(object):
 class BasicPage(object):
 
     # The width of the thumbnails is defined arbitrarily
-    DEFAULT_THUMB_WIDTH = 150
+    DEFAULT_THUMB_WIDTH = 300
     # The height of the thumbnails is defined based on the A4 format
     # proportions
-    DEFAULT_THUMB_HEIGHT = 212
+    DEFAULT_THUMB_HEIGHT = 424
 
     EXT_THUMB = "thumb.jpg"
     FILE_PREFIX = "paper."
