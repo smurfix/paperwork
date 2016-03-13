@@ -512,8 +512,7 @@ class ActionDeleteDoc(SimpleAction):
 
     def _on_doc_deleted_from_index(self, doc):
         doclist = self.__main_win.doclist
-        rowbox = doclist.model['by_id'][doc.docid]
-        doclist.gui['list'].remove(rowbox)
+        doclist.drop_doc(doc)
         doc.destroy()
 
 
@@ -765,8 +764,12 @@ class DocList(object):
 
     def drop_doc(self, doc):
         logger.info("*** delete %s",doc.docid)
-        rowbox = self.model['by_id'].pop(doc.docid)
-        self.gui['list'].remove(rowbox)
+        try:
+            rowbox = self.model['by_id'].pop(doc.docid)
+        except KeyError:
+            pass # already gone
+        else:
+            self.gui['list'].remove(rowbox)
 
     def clear(self):
         self.gui['list'].freeze_child_notify()
@@ -914,6 +917,8 @@ class DocList(object):
         Arguments:
             docs --- Array of Doc
         """
+        if not docs:
+            return
         for doc in docs:
             logger.info("*** refresh %s",doc.docid)
             if doc.docid in self.model['by_id']:
