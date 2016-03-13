@@ -344,9 +344,9 @@ class JobIndexUpdater(Job):
         self.upd_docs = upd_docs
         self.del_docs = del_docs
 
-        self.known_new_docs = new_docs
-        self.known_upd_docs = upd_docs
-        self.known_del_docs = del_docs
+        self.known_new_docs = new_docs.copy()
+        self.known_upd_docs = upd_docs.copy()
+        self.known_del_docs = del_docs.copy()
 
         self.optimize = optimize
         self.index_updater = None
