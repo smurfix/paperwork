@@ -751,7 +751,8 @@ class DocList(object):
             self.gui['list'].select_row(rowbox)
 
     def insert_doc(self, doc, top=False):
-        logger.info("*** insert %s",doc.docid)
+        if doc.docid in self.model['by_id']:
+            return
         rowbox = Gtk.ListBoxRow()
         self._make_listboxrow_doc_widget(doc, rowbox, False)
         rowbox._paperwork_docid = doc.docid
