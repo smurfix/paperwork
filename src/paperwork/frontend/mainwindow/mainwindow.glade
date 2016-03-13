@@ -614,6 +614,8 @@
                                 <property name="editable">False</property>
                                 <property name="invisible_char">●</property>
                                 <property name="text"> </property>
+                                <property name="primary_icon_name">application-certificate-symbolic</property>
+                                <property name="primary_icon_sensitive">True</property>
                                 <property name="secondary_icon_name">x-office-calendar-symbolic</property>
                                 <property name="secondary_icon_sensitive">True</property>
                               </object>

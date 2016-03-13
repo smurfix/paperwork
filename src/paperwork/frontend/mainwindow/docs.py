@@ -414,6 +414,7 @@ class ActionSetDocDate(SimpleAction):
             self.__main_win.doc_properties_panel.new_doc_date = date
         else:
             self.__main_win.doc_properties_panel.new_doc_date = None
+        self.__main_win.last_date = date
 
         popover.set_visible(False)
 
@@ -1045,7 +1046,7 @@ class DocPropertiesPanel(object):
 
         self.widgets['name'].connect(
             "icon-release", lambda entry, icon, event:
-            GLib.idle_add(self._open_calendar))
+            GLib.idle_add(self._open_calendar,icon))
 
         self.job_factories = {
             'label_creator': JobFactoryLabelCreator(self),
@@ -1088,23 +1089,19 @@ class DocPropertiesPanel(object):
         self.refresh_label_list()
         self.refresh_keywords_textview()
 
-    def _open_calendar(self):
-        self.popovers['calendar'].set_relative_to(
-            self.widgets['name'])
-        if self.new_doc_date is not None:
-            self.widgets['calendar'].select_month(
-                self.new_doc_date.month - 1,
-                self.new_doc_date.year
-            )
-            self.widgets['calendar'].select_day(self.new_doc_date.day)
+    def _open_calendar(self,icon):
+        date = None
+        if icon == Gtk.EntryIconPosition.PRIMARY:
+            date = self.__main_win.last_date
         else:
-            try:
-                date = self.doc.date
-                self.widgets['calendar'].select_month(date.month - 1, date.year)
-                self.widgets['calendar'].select_day(date.day)
-            except Exception as exc:
-                logger.warning("Failed to parse document date: %s --> %s"
-                               % (str(self.doc.docid), str(exc)))
+            date = self.new_doc_date
+        if date is None and self.__main_win.doc is not None:
+            date = self.__main_win.doc.date
+        if date is None:
+            date = datetime.datetime.now()
+        self.popovers['calendar'].set_relative_to(self.widgets['name'])
+        self.widgets['calendar'].select_month(date.month-1, date.year)
+        self.widgets['calendar'].select_day(date.day)
         self.popovers['calendar'].set_visible(True)
 
     def apply_properties(self):

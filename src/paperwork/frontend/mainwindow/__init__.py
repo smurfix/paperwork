@@ -1945,6 +1945,7 @@ class MainWindow(object):
         self.scan_drawers = {}  # docid --> {page_nb: extra drawer}
 
         search_completion = Gtk.EntryCompletion()
+        self.last_date = None
 
         self.zoom_level = {
             'gui': widget_tree.get_object("scaleZoom"),
