@@ -299,7 +299,7 @@ class DocIndexUpdater(GObject.GObject):
         """
         Apply the changes to the index
         """
-        logger.info("Index: Commiting changes")
+        logger.info("Index: Committing changes")
         self.index_writer.commit()
         del self.index_writer
         self.label_guesser_updater.commit()
