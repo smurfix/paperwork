@@ -344,6 +344,10 @@ class JobIndexUpdater(Job):
         self.upd_docs = upd_docs
         self.del_docs = del_docs
 
+        self.known_new_docs = new_docs
+        self.known_upd_docs = upd_docs
+        self.known_del_docs = del_docs
+
         self.optimize = optimize
         self.index_updater = None
         self.total = (len(self.new_docs) + len(self.upd_docs) +
@@ -371,7 +375,7 @@ class JobIndexUpdater(Job):
 
         self.can_run = True
 
-        total = len(self.new_docs) + len(self.upd_docs) + len(self.del_docs)
+        total = len(self.known_new_docs) + len(self.known_upd_docs) + len(self.known_del_docs)
         if total <= 0 and not self.optimize and self.index_updater is None:
             return
 
@@ -2484,11 +2488,11 @@ class MainWindow(object):
         self.set_progression(src, 0.0, None)
 
     def on_index_update_write_cb(self, src):
-        for d in src.del_docs:
+        for d in src.known_del_docs:
             self.doclist.drop_doc(d)
-        for d in src.new_docs:
+        for d in src.known_new_docs:
             self.doclist.insert_doc(d)
-        self.doclist.refresh_docs(src.upd_docs)
+        self.doclist.refresh_docs(src.known_upd_docs)
 
     def on_index_update_end_cb(self, src):
         self.schedulers['main'].cancel_all(
