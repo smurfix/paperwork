@@ -271,7 +271,7 @@ class ImgDoc(BasicDoc):
         except OSError, exc:
             if exc.errno != errno.ENOENT:
                 logger.error("Exception while trying to get the number of"
-                             " pages of '%s': %s" % (self.docid, exc))
+                             " pages of '%s': %s", self.docid, exc)
                 raise
             return 0
 
@@ -298,7 +298,7 @@ class ImgDoc(BasicDoc):
         mkdir_p(self.path)
 
         new_page = ImgPage(self, self.nb_pages)
-        logger.info("%s --> %s" % (str(page), str(new_page)))
+        logger.info("%s --> %s", page, new_page)
         new_page._steal_content(page)
         page.doc.drop_cache()
         self.drop_cache()
@@ -310,7 +310,7 @@ class ImgDoc(BasicDoc):
 
     def get_docfilehash(self):
         if self._get_nb_pages() == 0:
-            logger.warn("WARNING: Document %s is empty" % self.docid)
+            logger.warn("WARNING: Document %s is empty", self.docid)
             dochash = 0
         else:
             dochash = 0
@@ -320,7 +320,7 @@ class ImgDoc(BasicDoc):
 
     def add_page(self, img, boxes):
         mkdir_p(self.path)
-        logger.info("Adding page %d to %s" % (self.nb_pages, str(self)))
+        logger.info("Adding page %d to %s", self.nb_pages, self)
         page = ImgPage(self, self.nb_pages)
         page.img = img
         page.boxes = boxes
@@ -331,7 +331,7 @@ class ImgDoc(BasicDoc):
     def insert_page(self, img, boxes, page_nb):
         mkdir_p(self.path)
 
-        logger.info("Inserting page %d to %s" % (page_nb, str(self)))
+        logger.info("Inserting page %d to %s", page_nb, self)
 
         if page_nb > self.nb_pages:
             page_nb = self.nb_pages
@@ -357,8 +357,8 @@ def is_img_doc(docpath):
     try:
         filelist = os.listdir(docpath)
     except OSError, exc:
-        logger.warn("Warning: Failed to list files in %s: %s"
-                    % (docpath, str(exc)))
+        logger.warn("Warning: Failed to list files in %s: %s",
+                    docpath, exc)
         return False
     for filename in filelist:
         if (filename.lower().endswith(ImgPage.EXT_IMG)

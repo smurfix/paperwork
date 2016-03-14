@@ -266,7 +266,7 @@ class DocIndexUpdater(GObject.GObject):
         """
         Add a document to the index
         """
-        logger.info("Indexing new doc: %s" % doc)
+        logger.info("Indexing new doc: %s", doc)
         self._update_doc_in_index(self.index_writer, doc)
         self.label_guesser_updater.add_doc(doc)
         if doc.docid not in self.docsearch._docs_by_id:
@@ -276,7 +276,7 @@ class DocIndexUpdater(GObject.GObject):
         """
         Update a document in the index
         """
-        logger.info("Updating modified doc: %s" % doc)
+        logger.info("Updating modified doc: %s", doc)
         self._update_doc_in_index(self.index_writer, doc)
         self.label_guesser_updater.upd_doc(doc)
 
@@ -284,7 +284,7 @@ class DocIndexUpdater(GObject.GObject):
         """
         Delete a document
         """
-        logger.info("Removing doc from the index: %s" % doc)
+        logger.info("Removing doc from the index: %s", doc)
         if doc.docid in self.docsearch._docs_by_id:
             self.docsearch._docs_by_id.pop(doc.docid)
         if isinstance(doc, str) or isinstance(doc, unicode):
@@ -375,7 +375,7 @@ class DocSearch(object):
 
         need_index_rewrite = True
         try:
-            logger.info("Opening index dir '%s' ..." % self.indexdir)
+            logger.info("Opening index dir '%s' ...", self.indexdir)
             self.index = whoosh.index.open_dir(self.indexdir)
             # check that the schema is up-to-date
             # We use the string representation of the schemas, because previous
@@ -383,14 +383,14 @@ class DocSearch(object):
             if str(self.index.schema) == str(self.WHOOSH_SCHEMA):
                 need_index_rewrite = False
         except (whoosh.index.EmptyIndexError, ValueError) as exc:
-            logger.warning("Failed to open index '%s'" % self.indexdir)
-            logger.warning("Exception was: %s" % str(exc))
+            logger.warning("Failed to open index '%s'", self.indexdir)
+            logger.warning("Exception was: %s", exc)
 
         if need_index_rewrite:
             logger.info("Creating a new index")
             self.index = whoosh.index.create_in(self.indexdir,
                                                 self.WHOOSH_SCHEMA)
-            logger.info("Index '%s' created" % self.indexdir)
+            logger.info("Index '%s' created", self.indexdir)
 
         self.__searcher = self.index.searcher()
 
@@ -489,8 +489,7 @@ class DocSearch(object):
                 if doc_type_name_b == doc_type_name:
                     doc = doc_type(docpath, docid, label_store=self.label_store)
             if not doc:
-                logger.warning(
-                    ("Warning: unknown doc type found in the index: %s") %
+                logger.warning("unknown doc type found in the index: %s",
                     doc_type_name
                 )
         # otherwise we guess the doc type
@@ -500,7 +499,7 @@ class DocSearch(object):
                     doc = doc_type(docpath, docid, label_store=self.label_store)
                     break
         if not doc:
-            logger.warning("Warning: unknown doc type for doc '%s'" % docid)
+            logger.warning("Warning: unknown doc type for doc '%s'", docid)
 
         return doc
 
@@ -570,7 +569,7 @@ class DocSearch(object):
         updater.upd_doc(page.doc)
         updater.commit()
         if page.doc.docid not in self._docs_by_id:
-            logger.info("Adding document '%s' to the index" % page.doc.docid)
+            logger.info("Adding document '%s' to the index", page.doc.docid)
             assert(page.doc is not None)
             self._docs_by_id[page.doc.docid] = page.doc
 

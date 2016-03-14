@@ -246,7 +246,10 @@ class LabelGuesser(object):
             try:
                 self._bayes[label_name].cache_train()
             except Exception:
-                logger.exception("Could not load cache for label '%s' from %s",label_name,self._bayes[label_name].get_cache_location())
+                logger.exception("Could not load cache "
+                                 "for label '%s' from %s",
+                          label_name,
+                          self._bayes[label_name].get_cache_location())
 
     def get_updater(self):
         return LabelGuessUpdater(self)

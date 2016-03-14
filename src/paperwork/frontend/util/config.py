@@ -65,7 +65,7 @@ class _ScanTimes(object):
         for (k, v) in self.values.iteritems():
             if k not in self.__ITEM_2_CONFIG:
                 logger.warning("Got timing for '%s' but don't know how to"
-                               " store it" % k)
+                               " store it", k)
                 continue
             cfg = self.__ITEM_2_CONFIG[k]
             config.set(cfg[0], cfg[1], str(v))
@@ -110,8 +110,8 @@ class _PaperworkScannerCalibration(object):
             except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
                 logger.warning("Calibration resolution is not specified in the"
                                " configuration. Will assume the calibration"
-                               " was done with a resolution of %ddpi"
-                               % resolution)
+                               " was done with a resolution of %ddpi",
+                               resolution)
 
             self.value = (resolution, ((pt_a_x, pt_a_y), (pt_b_x, pt_b_y)))
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
@@ -221,9 +221,9 @@ class _PaperworkFrontendConfigUtil(object):
                     return ocr_lang
         except Exception, exc:
             logger.error("Warning: Failed to figure out system language"
-                         " (locale is [%s]). Will default to %s"
-                         % (default_locale_long, DEFAULT_OCR_LANG))
-            logger.error('Exception was: %s' % exc)
+                         " (locale is [%s]). Will default to %s",
+                         default_locale_long, DEFAULT_OCR_LANG)
+            logger.error('Exception was: %s', exc)
         return DEFAULT_OCR_LANG
 
     @staticmethod
@@ -286,9 +286,9 @@ def load_config():
 
 
 def _get_scanner(config, devid, preferred_sources=None):
-    logger.info("Will scan using %s" % str(devid))
+    logger.info("Will scan using %s", devid)
     resolution = config['scanner_resolution'].value
-    logger.info("Will scan at a resolution of %d" % resolution)
+    logger.info("Will scan at a resolution of %d", resolution)
 
     dev = pyinsane.Scanner(name=devid)
 
@@ -315,14 +315,14 @@ def _get_scanner(config, devid, preferred_sources=None):
                                 preferred_sources)
             except (KeyError, pyinsane.SaneException), exc:
                 config_source = config['scanner_source'].value
-                logger.error("Warning: Unable to set scanner source to '%s': %s"
-                             % (preferred_sources, exc))
+                logger.error("Warning: Unable to set scanner source to '%s': %s",
+                             preferred_sources, exc)
                 if dev.options['source'].capabilities.is_active():
                     dev.options['source'].value = config_source
         else:
             if dev.options['source'].capabilities.is_active():
                 dev.options['source'].value = config_source
-            logger.info("Will scan using source %s" % str(config_source))
+            logger.info("Will scan using source %s", config_source)
 
     if 'resolution' not in dev.options:
         logger.warning("Can't set the resolution on this scanner."
@@ -331,8 +331,8 @@ def _get_scanner(config, devid, preferred_sources=None):
         try:
             dev.options['resolution'].value = resolution
         except pyinsane.SaneException:
-            logger.warning("Unable to set scanner resolution to %d: %s"
-                           % (resolution, exc))
+            logger.warning("Unable to set scanner resolution to %d: %s",
+                           resolution, exc)
 
     if 'mode' not in dev.options:
         logger.warning("Can't set the mode on this scanner. Option not found")
@@ -361,8 +361,8 @@ def get_scanner(config, preferred_sources=None):
     try:
         return _get_scanner(config, devid, preferred_sources)
     except pyinsane.SaneException as exc:
-        logger.warning("Exception while configuring scanner: %s: %s"
-                       % (type(exc), exc))
+        logger.warning("Exception while configuring scanner: %s: %s",
+                       type(exc), exc)
         if (int(exc.status) != pyinsane.SaneStatus.IO_ERROR
                 and int(exc.status) != pyinsane.SaneStatus.UNSUPPORTED
                 and int(exc.status) != pyinsane.SaneStatus.INVAL):
@@ -372,5 +372,5 @@ def get_scanner(config, preferred_sources=None):
         devices = [x for x in pyinsane.get_devices() if x[:4] != "v4l:"]
         if len(devices) != 1:
             raise
-        logger.info("Will try another scanner id: %s" % devices[0].name)
+        logger.info("Will try another scanner id: %s", devices[0].name)
         return _get_scanner(config, devices[0].name, preferred_sources)

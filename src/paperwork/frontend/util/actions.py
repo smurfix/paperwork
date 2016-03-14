@@ -56,7 +56,7 @@ class SimpleAction(object):
         ]
 
     def do(self, **kwargs):
-        logger.info("Action: [%s]" % (self.name))
+        logger.info("Action: [%s]", self.name)
 
     def __do(self, **kwargs):
         if not self.enabled:

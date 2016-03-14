@@ -375,7 +375,7 @@ class ActionOpenSelectedDocument(SimpleAction):
             # assume new doc
             doc = self.__doclist.get_new_doc()
 
-        logger.info("Showing doc %s" % doc)
+        logger.info("Showing doc %s", doc)
         if doc.nb_pages <= 1:
             self.__main_win.set_layout('paged', force_refresh=False)
         else:
@@ -429,8 +429,8 @@ class ActionCreateLabel(SimpleAction):
         SimpleAction.do(self)
         labeleditor = LabelEditor()
         if labeleditor.edit(self.__main_win.window):
-            logger.info("Adding label %s to doc %s"
-                        % (labeleditor.label.name, self.__main_win.doc))
+            logger.info("Adding label %s to doc %s",
+                        labeleditor.label.name, self.__main_win.doc)
             job = self.__doc_properties.job_factories['label_creator'].make(
                 self.__main_win.docsearch, labeleditor.label,
                 self.__main_win.doc)
@@ -618,8 +618,8 @@ class DocList(object):
         if start_row == end_row:
             return
         if end_idx < start_idx:
-            logger.warn("Thumbnailing: End_idx (%d) < start_idx (%d) !?"
-                        % (end_idx, start_idx))
+            logger.warn("Thumbnailing: End_idx (%d) < start_idx (%d) !?",
+                        end_idx, start_idx)
             return
 
         documents = []
@@ -635,8 +635,8 @@ class DocList(object):
             if doc:
                 documents.append(doc)
 
-        logger.info("Will get thumbnails for %d documents [%d-%d]"
-                    % (len(documents), start_idx, end_idx))
+        logger.info("Will get thumbnails for %d documents [%d-%d]",
+                    len(documents), start_idx, end_idx)
 
         if len(documents) > 0:
             job = self.job_factories['doc_thumbnailer'].make(documents)
@@ -687,8 +687,8 @@ class DocList(object):
             return
 
         target_docid = target_row._paperwork_docid
-        logger.info("Drag-n-drop data received on doc list: [%s] --> [%s]"
-                    % (page_id, target_docid))
+        logger.info("Drag-n-drop data received on doc list: [%s] --> [%s]",
+                    page_id, target_docid)
 
         src_page = self.__main_win.docsearch.get(page_id)
         try:
@@ -881,7 +881,7 @@ class DocList(object):
             self.job_factories['doc_thumbnailer']
         )
 
-        logger.info("Got %d documents" % len(documents))
+        logger.info("Got %d documents", len(documents))
 
         self.clear()
 
@@ -930,7 +930,7 @@ class DocList(object):
         # and rethumbnail if necessary
         if redo_thumbnails and docs:
             docs = [x for x in docs]
-            logger.info("Will redo thumbnails: %s" % str(docs))
+            logger.info("Will redo thumbnails: %s", docs)
             job = self.job_factories['doc_thumbnailer'].make(docs)
             self.__main_win.schedulers['main'].schedule(job)
 

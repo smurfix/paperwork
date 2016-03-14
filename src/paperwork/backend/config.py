@@ -92,11 +92,11 @@ class PaperworkConfig(object):
         for self.__configfile in configfiles:
             if os.access(self.__configfile, os.R_OK):
                 configfile_found = True
-                logger.info("Config file found: %s" % self.__configfile)
+                logger.info("Config file found: %s", self.__configfile)
                 break
         if not configfile_found:
-            logger.info("Config file not found. Will use '%s'"
-                        % self.__configfile)
+            logger.info("Config file not found. Will use '%s'",
+                        self.__configfile)
         util.mkdir_p(os.path.dirname(self.__configfile))
 
     def read(self):
@@ -107,7 +107,7 @@ class PaperworkConfig(object):
         If there is a 'paperwork.conf' in the current directory, it will be
         read instead of '~/.paperwork.conf', see __init__())
         """
-        logger.info("Reloading %s ..." % self.__configfile)
+        logger.info("Reloading %s ...", self.__configfile)
 
         # smash the previous config
         self._configparser = ConfigParser.SafeConfigParser()
@@ -129,7 +129,7 @@ class PaperworkConfig(object):
         Rewrite the configuration file. It rewrites the same file than
         PaperworkConfig.read() read.
         """
-        logger.info("Updating %s ..." % self.__configfile)
+        logger.info("Updating %s ...", self.__configfile)
 
         for setting in self.settings.values():
             setting.update(self._configparser)
@@ -140,7 +140,7 @@ class PaperworkConfig(object):
                 self._configparser.write(file_descriptor)
             logger.info("Done")
         except IOError as e:
-            logger.warn("Cannot write to configuration file %s : %s" % (self.__configfile, e.strerror))
+            logger.warn("Cannot write to configuration file %s : %s", self.__configfile, e.strerror)
             return False
 
         return True

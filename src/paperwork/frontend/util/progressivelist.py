@@ -194,8 +194,8 @@ class ProgressiveList(GObject.GObject):
             model_line += padding
             self.model.append(model_line)
 
-        logger.info("List '%s' : %d elements displayed (%d additionnal)"
-                    % (self.name, self.nb_displayed, len(newly_displayed)))
+        logger.info("List '%s' : %d elements displayed (%d additional)",
+                    self.name, self.nb_displayed, len(newly_displayed))
 
     def __on_scrollbar_moved(self):
         if self.nb_displayed >= len(self.model_content):

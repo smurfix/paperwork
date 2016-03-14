@@ -42,8 +42,8 @@ def _set_scanner_opt(scanner_opt_name, scanner_opt, possible_values):
                 "%s are not a valid values for option %s"
                 % (str(possible_values), scanner_opt_name))
 
-    logger.info("Setting scanner option '%s' to '%s'"
-                % (scanner_opt_name, str(value)))
+    logger.info("Setting scanner option '%s' to '%s'",
+                scanner_opt_name, value)
     scanner_opt.value = value
 
 
@@ -59,8 +59,8 @@ def set_scanner_opt(scanner_opt_name, scanner_opt, possible_values):
     """
     if not scanner_opt.capabilities.is_active():
         logger.warning("Unable to set scanner option '%s':"
-                       " Option is not active"
-                       % scanner_opt_name)
+                       " Option is not active",
+                       scanner_opt_name)
         return False
 
     # WORKAROUND(Jflesch): For some reason, my crappy scanner returns
@@ -71,8 +71,8 @@ def set_scanner_opt(scanner_opt_name, scanner_opt, possible_values):
             break
         except Exception, exc:
             logger.warning("Warning: Failed to set scanner option"
-                           " %s=%s: %s (try %d/5)"
-                           % (scanner_opt_name, possible_values, str(exc), t))
+                           " %s=%s: %s (try %d/5)",
+                           scanner_opt_name, possible_values, exc, t)
     return True
 
 
@@ -83,7 +83,7 @@ def __set_scan_area_pos(options, opt_name, select_value_func, missing_options):
     else:
         if not options[opt_name].capabilities.is_active():
             logger.warning("Unable to set scanner option '%s':"
-                           " Option is not active" % opt_name)
+                           " Option is not active", opt_name)
             return
         constraint = options[opt_name].constraint
         if isinstance(constraint, tuple):
@@ -103,5 +103,5 @@ def maximize_scan_area(scanner):
     __set_scan_area_pos(opts, "page-height", max, None)
     __set_scan_area_pos(opts, "page-width", max, None)
     if missing_opts:
-        logger.warning("Failed to maximize the scan area. Missing options: %s"
-                       % ", ".join(missing_opts))
+        logger.warning("Failed to maximize the scan area. Missing options: %s",
+                       ", ".join(missing_opts))

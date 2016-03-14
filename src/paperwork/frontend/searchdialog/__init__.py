@@ -164,8 +164,8 @@ class SearchElementDate(SearchElement):
             try:
                 dt = datetime.datetime.strptime(txt, "%Y%m%d")
             except ValueError:
-                logger.warning("Failed to parse [%s]. Will use today date"
-                               % txt)
+                logger.warning("Failed to parse [%s]. Will use today date",
+                               txt)
                 dt = datetime.datetime.today()
         return (dt.year, dt.month, dt.day)
 
@@ -339,7 +339,7 @@ class SearchLine(object):
         model = combobox.get_model()
         for line in model:
             if line[1] == value:
-                logger.info("Element %d selected" % active_idx)
+                logger.info("Element %d selected", active_idx)
                 combobox.set_active(active_idx)
                 return
             active_idx += 1
@@ -364,7 +364,7 @@ class SearchLine(object):
         self.set_element(element)
 
     def set_element(self, element):
-        logger.info("Set element: %s" % str(element))
+        logger.info("Set element: %s", element)
         if self.placeholder:
             self.line.remove(self.placeholder)
             self.placeholder = None
@@ -412,7 +412,7 @@ class SearchLine(object):
             sl.select_not(not_value)
             sl.set_element(se)
             sl.connect_signals()
-            logger.info("Loaded from search: %s --> %s" % (search_txt, str(se)))
+            logger.info("Loaded from search: %s --> %s", search_txt, se)
             return sl
         assert()
 
@@ -448,7 +448,7 @@ class SearchDialog(object):
             logger.info("Starting from an empty search")
             self.add_element()
         else:
-            logger.info("Current search: %s" % keywords)
+            logger.info("Current search: %s", keywords)
 
             next_operator = None
             not_value = u""
@@ -463,7 +463,7 @@ class SearchDialog(object):
                     not_value = u"NOT"
                     continue
 
-                logger.info("Instantiating line for [%s]" % keyword)
+                logger.info("Instantiating line for [%s]", keyword)
                 sl = SearchLine.get_from_search(self, next_operator, not_value, keyword)
                 self.add_element(sl)
 
@@ -499,7 +499,7 @@ class SearchDialog(object):
                 out += not_value + u" "
             out += element.get_search_string() + u" "
         out = out.strip()
-        logger.info("Search: [%s]" % out)
+        logger.info("Search: [%s]", out)
         return out
 
     def get_search_string(self):

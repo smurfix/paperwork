@@ -437,7 +437,7 @@ class PageDrawer(Drawer, GObject.GObject):
         if not self.mouse_over:
             return
         page_id = self.page.id
-        logger.info("Drag-n-drop begin: selected: [%s]" % page_id)
+        logger.info("Drag-n-drop begin: selected: [%s]", page_id)
         self.is_drag_source = True
         self.redraw()
 
@@ -445,21 +445,21 @@ class PageDrawer(Drawer, GObject.GObject):
         if not self.is_drag_source:
             return
         page_id = self.page.id
-        logger.info("Drag-n-drop get: selected: [%s]" % page_id)
+        logger.info("Drag-n-drop get: selected: [%s]", page_id)
         data.set_text(unicode(page_id), -1)
 
     def _on_drag_failed(self, canvas, drag_context, result):
         if not self.is_drag_source:
             return
         page_id = self.page.id
-        logger.info("Drag-n-drop failed: %d ([%s])" % (result, page_id))
+        logger.info("Drag-n-drop failed: %d ([%s])", result, page_id)
         self.is_drag_source = False
 
     def _on_drag_end(self, canvas, drag_context):
         if not self.is_drag_source:
             return
         page_id = self.page.id
-        logger.info("Drag-n-drop end: selected: [%s]" % page_id)
+        logger.info("Drag-n-drop end: selected: [%s]", page_id)
         self.is_drag_source = False
         self.redraw()
 
@@ -1055,7 +1055,7 @@ class PageDrawer(Drawer, GObject.GObject):
             img_real_size = self.max_size
             current_size = self.size
             zoom_level = float(img_real_size[0]) / float(current_size[0])
-            logger.info("Zoom level: %f" % zoom_level)
+            logger.info("Zoom level: %f", zoom_level)
             coords = self.editor_grips.get_coords()
             coords = (
                 (int(coords[0][0] * zoom_level),
@@ -1064,8 +1064,8 @@ class PageDrawer(Drawer, GObject.GObject):
                  int(coords[1][1] * zoom_level)),
             )
             actions.append(PageCuttingAction(coords))
-        logger.info("Page edition applied: %s"
-                    % ", ".join([str(a) for a in actions]))
+        logger.info("Page edition applied: %s",
+                    ", ".join([str(a) for a in actions]))
         self.emit("page-edited", actions)
         self._on_edit_done()
 
@@ -1180,8 +1180,8 @@ class PageDropHandler(Drawer):
         else:
             dst_page_nb = 0
 
-        logger.info("Drag-n-drop page: %s --> %s %d"
-                    % (str(src_page), str(dst_doc), dst_page_nb))
+        logger.info("Drag-n-drop page: %s --> %s %d",
+                    src_page, dst_doc, dst_page_nb)
 
         if ((dst_page_nb == src_page.page_nb
                 or dst_page_nb == src_page.page_nb + 1)

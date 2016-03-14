@@ -171,13 +171,13 @@ class PdfDoc(BasicDoc):
                                           keep_refs=keep_refs)
 
     def import_pdf(self, file_uri):
-        logger.info("PDF: Importing '%s'" % (file_uri))
+        logger.info("PDF: Importing '%s'", file_uri)
         try:
             dest = Gio.File.parse_name("file://%s" % urllib.quote(self.path))
             dest.make_directory(None)
         except GLib.GError, exc:
-            logger.exception("Warning: Error while trying to create '%s': %s"
-                             % (self.path, exc))
+            logger.exception("Warning: Error while trying to create '%s': %s",
+                             self.path, exc)
         f = Gio.File.parse_name(file_uri)
         dest = dest.get_child(PDF_FILENAME)
         f.copy(dest,
@@ -214,7 +214,7 @@ class PdfDoc(BasicDoc):
         if not pages:
             return
 
-        logger.info("Splitting %s at %s" % (self.docid,pages))
+        logger.info("Splitting %s at %s", self.docid,pages)
 
         # Poppler can't work with individual pages, thus we use pdfrw.
         from paperwork.backend.pdf.doc import PDF_FILENAME, PdfDoc
@@ -259,7 +259,7 @@ class PdfDoc(BasicDoc):
         Delete these pages. May delete the whole document.
         """
 
-        logger.info("Destroying pages: %s %s" % (self,pages))
+        logger.info("Destroying pages: %s %s", self,pages)
         if self.nb_pages <= 1:
             self.destroy()
             return
@@ -301,7 +301,6 @@ def is_pdf_doc(docpath):
     try:
         filelist = os.listdir(docpath)
     except OSError, exc:
-        logger.exception("Warning: Failed to list files in %s: %s"
-                         % (docpath, str(exc)))
+        logger.exception("Warning: Failed to list files in %s", docpath)
         return False
     return PDF_FILENAME in filelist

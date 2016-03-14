@@ -77,9 +77,9 @@ def set_locale():
     got_locales = False
     locales_path = None
     for (fr_locale_path, locales_path) in LOCALE_PATHS:
-        logger.info("Looking for locales in '%s' ..." % (fr_locale_path))
+        logger.info("Looking for locales in '%s' ...", fr_locale_path)
         if os.access(fr_locale_path, os.R_OK):
-            logger.info("Will use locales from '%s'" % (locales_path))
+            logger.info("Will use locales from '%s'", locales_path)
             got_locales = True
             break
     if not got_locales:

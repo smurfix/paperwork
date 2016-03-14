@@ -170,7 +170,7 @@ class PickColorAction(SimpleAction):
             float(ord(pixels[1]) * 0x101) / 65535,
             float(ord(pixels[2]) * 0x101) / 65535,
         )
-        logger.info("Picked color: %s" % str(rgb))
+        logger.info("Picked color: %s", rgb)
         return rgb
 
     def _on_mouse_release(self, invisible_widget, event):
@@ -245,7 +245,7 @@ class LabelEditor(object):
 
         dialog.destroy()
 
-        logger.info("Label after editing: %s" % self.label)
+        logger.info("Label after editing: %s", self.label)
         return (response == Gtk.ResponseType.OK)
 
     def __on_label_entry_changed(self, label_entry):

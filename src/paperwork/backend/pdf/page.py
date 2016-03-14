@@ -106,7 +106,7 @@ class PdfPage(BasicPage):
                         line = line.strip()
                         txt.append(line)
             except IOError, exc:
-                logger.error("Unable to read [%s]: %s" % (txtfile, str(exc)))
+                logger.error("Unable to read [%s]: %s", txtfile, exc)
             return txt
 
         except OSError, exc:  # os.stat() failed
@@ -149,8 +149,8 @@ class PdfPage(BasicPage):
                     self.__boxes = box_builder.read_file(file_desc)
                 return self.__boxes
             except IOError, exc:
-                logger.error("Unable to get boxes for '%s': %s"
-                             % (self.doc.docid, exc))
+                logger.error("Unable to get boxes for '%s': %s",
+                             self.doc.docid, exc)
                 # will fall back on pdf boxes
         except OSError, exc:  # os.stat() failed
             pass
@@ -188,8 +188,8 @@ class PdfPage(BasicPage):
         # context. It would be much more efficient.
 
         if factor not in self.__img_cache:
-            logger.debug('Building img from pdf with factor: %s'
-                         % factor)
+            logger.debug('Building img from pdf with factor: %s',
+                         factor)
             width = int(factor * self._size[0])
             height = int(factor * self._size[1])
 
@@ -216,7 +216,7 @@ class PdfPage(BasicPage):
         Split the document at this page.
         """
 
-        logger.info("Splitting at page: %s" % self)
+        logger.info("Splitting at page: %s", self)
         if self.page_nb == 0:
             return
 
@@ -228,7 +228,7 @@ class PdfPage(BasicPage):
         last page.
         """
 
-        logger.info("Destroying page: %s" % self)
+        logger.info("Destroying page: %s", self)
         if self.doc.nb_pages <= 1:
             self.doc.destroy()
             return
@@ -250,8 +250,8 @@ class PdfPage(BasicPage):
 
         page_nb += offset
 
-        logger.info("--> Moving page %d (+%d) to index %d"
-                    % (self.page_nb, offset, page_nb))
+        logger.info("--> Moving page %d (+%d) to index %d",
+                    self.page_nb, offset, page_nb)
 
         self.page_nb = page_nb
 
@@ -262,7 +262,7 @@ class PdfPage(BasicPage):
         for key in src.keys():
             if os.access(src[key], os.F_OK):
                 if os.access(dst[key], os.F_OK):
-                    logger.error("Error: file already exists: %s" % dst[key])
+                    logger.error("Error: file already exists: %s", dst[key])
                     assert(0)
                 os.rename(src[key], dst[key])
 
@@ -276,8 +276,8 @@ class PdfPage(BasicPage):
 
         page_nb = self.page_nb
 
-        logger.info("--> Moving page %d to %s:%d"
-                    % (self.page_nb, new_doc.path, new_page_nb))
+        logger.info("--> Moving page %d to %s:%d",
+                    self.page_nb, new_doc.path, new_page_nb)
 
         self.drop_cache()
         self.doc = new_doc
@@ -290,22 +290,22 @@ class PdfPage(BasicPage):
         for key in src.keys():
             if os.access(src[key], os.F_OK):
                 if os.access(dst[key], os.F_OK):
-                    logger.error("Error: file already exists: %s" % dst[key])
+                    logger.error("Error: file already exists: %s", dst[key])
                     assert(0)
                 os.rename(src[key], dst[key])
 
     def print_page_cb(self, print_op, print_context, keep_refs={}):
         ctx = print_context.get_cairo_context()
 
-        logger.debug("Context: %d x %d" % (print_context.get_width(),
-                                           print_context.get_height()))
-        logger.debug("Size: %d x %d" % (self._size[0], self._size[1]))
+        logger.debug("Context: %d x %d", print_context.get_width(),
+                                         print_context.get_height())
+        logger.debug("Size: %d x %d", self._size[0], self._size[1])
 
         factor_x = float(print_context.get_width()) / float(self._size[0])
         factor_y = float(print_context.get_height()) / float(self._size[1])
         factor = min(factor_x, factor_y)
 
-        logger.debug("Scale: %f x %f --> %f" % (factor_x, factor_y, factor))
+        logger.debug("Scale: %f x %f --> %f", factor_x, factor_y, factor)
 
         ctx.scale(factor, factor)
 

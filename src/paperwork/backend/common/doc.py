@@ -249,8 +249,8 @@ class BasicDoc(object):
 
         Will go on each document, and replace 'old_label' by 'new_label'
         """
-        logger.info("%s : Updating label ([%s] -> [%s])"
-                    % (str(self), old_label.name, new_label.name))
+        logger.info("%s : Updating label ([%s] -> [%s])",
+                    str(self), old_label.name, new_label.name)
         labels = self.labels
         try:
             labels.remove(old_label)
@@ -258,8 +258,8 @@ class BasicDoc(object):
             # this document doesn't have this label
             return
 
-        logger.info("%s : Updating label ([%s] -> [%s])"
-                    % (str(self), old_label.name, new_label.name))
+        logger.info("%s : Updating label ([%s] -> [%s])",
+                    str(self), old_label.name, new_label.name)
         labels.add(new_label)
         self._write_labels(labels)
 
@@ -340,8 +340,8 @@ class BasicDoc(object):
             final = datetime_obj.strftime("%x")
             return final
         except Exception, exc:
-            logger.error("Unable to parse document id [%s]: %s"
-                         % (self.docid, exc))
+            logger.error("Unable to parse document id [%s]: %s",
+                         self.docid, exc)
             return self.docid
 
     name = property(__get_name)
@@ -362,7 +362,7 @@ class BasicDoc(object):
 
         self.__docid = new_docid
         if self.path != new_docpath:
-            logger.info("Changing docid: %s -> %s" % (self.path, new_docpath))
+            logger.info("Changing docid: %s -> %s", self.path, new_docpath)
             os.rename(self.path, new_docpath)
             self.path = new_docpath
 

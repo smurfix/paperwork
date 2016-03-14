@@ -178,13 +178,13 @@ class JobScheduler(object):
         """Starts the scheduler"""
         assert(not self.running)
         assert(self._thread is None)
-        logger.info("[Scheduler %s] Starting" % self.name)
+        logger.info("[Scheduler %s] Starting", self.name)
         self._thread = threading.Thread(target=self._run)
         self.running = True
         self._thread.start()
 
     def _run(self):
-        logger.info("[Scheduler %s] Started" % self.name)
+        logger.info("[Scheduler %s] Started", self.name)
 
         while self.running:
 
@@ -218,22 +218,22 @@ class JobScheduler(object):
                              % (str(self._active_job)))
                 idx = 0
                 for stack_el in self._active_job.started_by:
-                    logger.error("%2d: %20s: L%5d: %s"
-                                 % (idx, stack_el[0],
-                                    stack_el[1], stack_el[2]))
+                    logger.error("%2d: %20s: L%5d: %s",
+                                 idx, stack_el[0],
+                                 stack_el[1], stack_el[2])
                     idx += 1
             stop = time.time()
 
             diff = stop - start
             if (self._active_job.can_stop
                     or diff <= Job.MAX_TIME_FOR_UNSTOPPABLE_JOB):
-                logger.debug("Job %s took %dms"
-                             % (str(self._active_job), diff * 1000))
+                logger.debug("Job %s took %dms",
+                             self._active_job, diff * 1000)
             else:
                 logger.warning("Job %s took %dms and is unstoppable !"
-                               " (maximum allowed: %dms)"
-                               % (str(self._active_job), diff * 1000,
-                                  Job.MAX_TIME_FOR_UNSTOPPABLE_JOB * 1000))
+                               " (maximum allowed: %dms)",
+                               self._active_job, diff * 1000,
+                               Job.MAX_TIME_FOR_UNSTOPPABLE_JOB * 1000)
 
             self._job_queue_cond.acquire()
             try:
@@ -249,14 +249,14 @@ class JobScheduler(object):
         active_job = self._active_job
 
         if active_job.can_stop:
-            logger.debug("[Scheduler %s] Job %s marked for stopping"
-                         % (self.name, str(active_job)))
+            logger.debug("[Scheduler %s] Job %s marked for stopping",
+                         self.name, active_job)
             active_job.stop(will_resume=will_resume)
         else:
             logger.warning(
                 "[Scheduler %s] Tried to stop job %s, but it can't"
-                " be stopped"
-                % (self.name, str(active_job)))
+                " be stopped",
+                self.name, active_job)
 
     def schedule(self, job):
         """
@@ -269,8 +269,8 @@ class JobScheduler(object):
         In case 2 jobs have the same priority, they are run in the order they
         were given.
         """
-        logger.debug("[Scheduler %s] Queuing job %s"
-                     % (self.name, str(job)))
+        logger.debug("[Scheduler %s] Queuing job %s",
+                     self.name, job)
 
         job.started_by = traceback.extract_stack()
 
@@ -285,8 +285,8 @@ class JobScheduler(object):
                     and active.priority < job.priority):
                 if not active.can_stop:
                     logger.debug("Job %s has a higher priority than %s,"
-                                 " but %s can't be stopped"
-                                 % (str(job), str(active), str(active)))
+                                 " but %s can't be stopped",
+                                 job, active, active)
                 else:
                     self._stop_active_job(will_resume=True)
                     # the active job may have already been re-queued
@@ -311,8 +311,8 @@ class JobScheduler(object):
                     self._job_queue.remove(j)
                     if j.job.already_started_once:
                         j.job.stop(will_resume=False)
-                    logger.debug("[Scheduler %s] Job %s cancelled"
-                                 % (self.name, str(j.job)))
+                    logger.debug("[Scheduler %s] Job %s cancelled",
+                                 self.name, j.job)
             except ValueError:
                 pass
 
@@ -323,21 +323,21 @@ class JobScheduler(object):
             self._job_queue_cond.release()
 
     def cancel(self, target_job):
-        logger.debug("[Scheduler %s] Canceling job %s"
-                     % (self.name, str(target_job)))
+        logger.debug("[Scheduler %s] Canceling job %s",
+                     self.name, target_job)
         self._cancel_matching_jobs(
             lambda job: (job == target_job))
 
     def cancel_all(self, factory):
-        logger.debug("[Scheduler %s] Canceling all jobs %s"
-                     % (self.name, factory.name))
+        logger.debug("[Scheduler %s] Canceling all jobs %s",
+                     self.name, factory.name)
         self._cancel_matching_jobs(
             lambda job: (job.factory == factory))
 
     def stop(self):
         assert(self.running)
         assert(self._thread is not None)
-        logger.info("[Scheduler %s] Stopping" % self.name)
+        logger.info("[Scheduler %s] Stopping", self.name)
 
         self.running = False
 
@@ -352,7 +352,7 @@ class JobScheduler(object):
         self._thread.join()
         self._thread = None
 
-        logger.info("[Scheduler %s] Stopped" % self.name)
+        logger.info("[Scheduler %s] Stopped", self.name)
 
 
 class JobProgressUpdater(Job):

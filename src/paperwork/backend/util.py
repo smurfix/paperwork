@@ -151,8 +151,8 @@ def check_spelling(spelling_lang, txt):
                 # hm, this word looks like it's in a bad shape
                 continue
 
-            logger.debug("Spell checking: Replacing: %s -> %s"
-                         % (word, main_suggestion))
+            logger.debug("Spell checking: Replacing: %s -> %s",
+                         word, main_suggestion)
 
             # let's replace the word by its suggestion
 
@@ -192,11 +192,11 @@ def rm_rf(path):
         for root, dirs, files in os.walk(path, topdown=False):
             for filename in files:
                 filepath = os.path.join(root, filename)
-                logger.info("Deleting file %s" % filepath)
+                logger.info("Deleting file %s", filepath)
                 os.unlink(filepath)
             for dirname in dirs:
                 dirpath = os.path.join(root, dirname)
-                logger.info("Deleting dir %s" % dirpath)
+                logger.info("Deleting dir %s", dirpath)
                 os.rmdir(dirpath)
         try:
             os.rmdir(path)

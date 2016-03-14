@@ -200,7 +200,7 @@ class _ImgOCRThread(threading.Thread):
             ("no_score", lambda txt: (txt, 0))
         ]
 
-        logger.info("Running OCR on page orientation %s" % self.name)
+        logger.info("Running OCR on page orientation %s", self.name)
         self.boxes = self.ocr_tool.image_to_string(
             self.img, lang=self.langs['ocr'],
             builder=pyocr.builders.LineBoxBuilder())
@@ -210,8 +210,8 @@ class _ImgOCRThread(threading.Thread):
         for score_method in SCORE_METHODS:
             try:
                 logger.info("Evaluating score of page orientation (%s)"
-                            " using method '%s' ..."
-                            % (self.name, score_method[0]))
+                            " using method '%s' ...",
+                            self.name, score_method[0])
                 (_, self.score) = score_method[1](txt)
                 # TODO(Jflesch): For now, we throw away the fixed version of
                 # the text:
@@ -221,8 +221,8 @@ class _ImgOCRThread(threading.Thread):
                 # without increasing too much indexation time
                 return
             except Exception, exc:
-                logger.error("Scoring method '%s' on orientation %s failed !"
-                             % (score_method[0], self.name))
+                logger.error("Scoring method '%s' on orientation %s failed !",
+                             score_method[0], self.name)
                 logger.error("Reason: %s" % exc)
 
 
@@ -270,7 +270,7 @@ class JobOCR(Job):
             raise Exception("OCR tool returned an unexpected orientation: %d"
                             % orientation['angle'])
 
-        logger.info("Detected orientation: %d" % orientation['angle'])
+        logger.info("Detected orientation: %d", orientation['angle'])
         if orientation['angle'] != 0:
             # The angle provided by pyocr is clockwise, so we want to rotate
             # the image with an angle of -1 * <angle of pyocr> (clockwise).
@@ -305,7 +305,7 @@ class JobOCR(Job):
         scores = []
 
         if len(imgs) > 1:
-            logger.debug("Will use %d process(es) for OCR" % (max_threads))
+            logger.debug("Will use %d process(es) for OCR", max_threads)
 
         # Run the OCR tools in as many threads as there are processors/core
         # on the computer
@@ -315,15 +315,15 @@ class JobOCR(Job):
             for thread in threads:
                 if not thread.is_alive():
                     threads.remove(thread)
-                    logger.info("OCR done on angle %d: %f"
-                                % (thread.angle, thread.score))
+                    logger.info("OCR done on angle %d: %f",
+                                thread.angle, thread.score)
                     scores.append((thread.score, thread.angle,
                                    thread.img, thread.boxes))
                     self.emit('ocr-score', thread.angle, thread.score)
             # start new threads if required
             while (len(threads) < max_threads and len(imgs) > 0):
                 (angle, img) = imgs.popitem()
-                logger.info("Starting OCR on angle %d" % angle)
+                logger.info("Starting OCR on angle %d", angle)
                 thread = _ImgOCRThread(str(nb), self.ocr_tool,
                                        self.langs, angle, img)
                 thread.start()
@@ -334,7 +334,7 @@ class JobOCR(Job):
         # We want the higher score first
         scores.sort(cmp=lambda x, y: cmp(y[0], x[0]))
 
-        logger.info("Best: %f" % (scores[0][0]))
+        logger.info("Best: %f", scores[0][0])
         return scores[0][1:]
 
     def do(self):
@@ -344,7 +344,7 @@ class JobOCR(Job):
             best = self.do_ocr_with_tool_heuristic(self.img)
         except Exception as exc:
             logger.info("Failed to use OCR tool heuristic for orientation"
-                        " detection: %s" % str(exc))
+                        " detection: %s", exc)
             logger.info("Falling back on Paperwork's heuristic")
             best = self.do_ocr_with_custom_heuristic(self.img)
 
@@ -368,7 +368,7 @@ class JobFactoryOCR(JobFactory):
         if len(ocr_tools) == 0:
             raise Exception("No OCR tool found")
         ocr_tool = ocr_tools[0]
-        logger.info("Will use tool '%s'" % (ocr_tool.get_name()))
+        logger.info("Will use tool '%s'", ocr_tool.get_name())
 
         job = JobOCR(self, next(self.id_generator), ocr_tool,
                      self.__config['langs'].value, angles, img)
@@ -577,11 +577,11 @@ class BasicScanWorkflowDrawer(Animation):
         for (angle, drawers) in self.ocr_drawers.iteritems():
             drawer = drawers[0]
             drawer.size = size
-            logger.info("Animator: Angle %d: %s %s -> %s %s"
-                        % (angle,
-                           str(drawer.position), str(drawer.size),
-                           str(target_positions[angle]),
-                           str(target_sizes)))
+            logger.info("Animator: Angle %d: %s %s -> %s %s",
+                        angle,
+                        drawer.position, drawer.size,
+                        target_positions[angle],
+                        target_sizes)
 
             # reduce the rotation to its minimum
             anim_angle = angle % 360

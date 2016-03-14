@@ -112,15 +112,13 @@ class ImgPage(BasicPage):
                 return boxes
             # fallback: old format: word boxes
             # shouldn't be used anymore ...
-            logger.warning("WARNING: Doc %s uses old box format" %
-                           (str(self.doc)))
+            logger.warning("WARNING: Doc %s uses old box format", self.doc)
             box_builder = pyocr.builders.WordBoxBuilder()
             with codecs.open(boxfile, 'r', encoding='utf-8') as file_desc:
                 boxes = box_builder.read_file(file_desc)
             return boxes
         except IOError, exc:
-            logger.error("Unable to get boxes for '%s': %s"
-                         % (self.doc.docid, exc))
+            logger.error("Unable to get boxes for '%s': %s", self.doc.docid, exc)
             return []
 
     def __set_boxes(self, boxes):
@@ -178,9 +176,9 @@ class ImgPage(BasicPage):
         new_w = int(SCALING * (print_context.get_width()))
         new_h = int(SCALING * (print_context.get_height()))
 
-        logger.info("DPI: %fx%f" % (print_context.get_dpi_x(),
-                                    print_context.get_dpi_y()))
-        logger.info("Scaling it down to %fx%f..." % (new_w, new_h))
+        logger.info("DPI: %fx%f", print_context.get_dpi_x(),
+                                  print_context.get_dpi_y())
+        logger.info("Scaling it down to %fx%f...", new_w, new_h)
         img = img.resize((new_w, new_h), PIL.Image.ANTIALIAS)
 
         surface = image2surface(img)
@@ -208,8 +206,8 @@ class ImgPage(BasicPage):
 
         page_nb += offset
 
-        logger.info("--> Moving page %d (+%d) to index %d"
-                    % (self.page_nb, offset, page_nb))
+        logger.info("--> Moving page %d (+%d) to index %d",
+                    self.page_nb, offset, page_nb)
 
         self.page_nb = page_nb
 
@@ -221,7 +219,7 @@ class ImgPage(BasicPage):
         for key in src.keys():
             if os.access(src[key], os.F_OK):
                 if os.access(dst[key], os.F_OK):
-                    logger.error("Error: file already exists: %s" % dst[key])
+                    logger.error("Error: file already exists: %s", dst[key])
                     assert(0)
                 os.rename(src[key], dst[key])
 
@@ -230,7 +228,7 @@ class ImgPage(BasicPage):
         Delete the page. May delete the whole document if it's actually the
         last page.
         """
-        logger.info("Destroying page: %s" % self)
+        logger.info("Destroying page: %s", self)
         if self.doc.nb_pages <= 1:
             self.doc.destroy()
             return
@@ -267,10 +265,10 @@ class ImgPage(BasicPage):
         for (src, dst) in to_move:
             # sanity check
             if os.access(dst, os.F_OK):
-                logger.error("Error, file already exists: %s" % dst)
+                logger.error("Error, file already exists: %s", dst)
                 assert(0)
         for (src, dst) in to_move:
-            logger.info("%s --> %s" % (src, dst))
+            logger.info("%s --> %s", src, dst)
             os.rename(src, dst)
 
         if (other_doc_nb_pages <= 1):

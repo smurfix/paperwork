@@ -131,7 +131,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable):
             self.need_ticks += 1
             if self.need_ticks == 1:
                 GLib.timeout_add(self.TICK_INTERVAL, self._tick)
-            logger.info("Animators: %d" % self.need_ticks)
+            logger.info("Animators: %d", self.need_ticks)
         finally:
             self.tick_counter_lock.release()
 
@@ -139,7 +139,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable):
         self.tick_counter_lock.acquire()
         try:
             self.need_ticks -= 1
-            logger.info("Animators: %d" % self.need_ticks)
+            logger.info("Animators: %d", self.need_ticks)
             if self.need_ticks <= 0:
                 self.need_stop_ticks += 1
             assert(self.need_ticks >= 0)

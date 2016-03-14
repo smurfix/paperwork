@@ -65,12 +65,12 @@ def load_uifile(filename):
     for ui_dir in UI_FILES_DIRS:
         ui_file = os.path.join(ui_dir, filename)
         if os.access(ui_file, os.R_OK):
-            logger.info("UI file used: " + ui_file)
+            logger.info("UI file used: %s", ui_file)
             widget_tree.add_from_file(ui_file)
             has_ui_file = True
             break
     if not has_ui_file:
-        logger.error("Can't find resource file '%s'. Aborting" % filename)
+        logger.error("Can't find resource file '%s'. Aborting", filename)
         raise Exception("Can't find resource file '%s'. Aborting" % filename)
     return widget_tree
 
@@ -92,12 +92,12 @@ def load_cssfile(filename):
     for css_dir in UI_FILES_DIRS:
         css_file = os.path.join(css_dir, filename)
         if os.access(css_file, os.R_OK):
-            logger.info("CSS file used: " + css_file)
+            logger.info("CSS file used: %s", css_file)
             css_provider.load_from_path(css_file)
             has_css_file = True
             break
     if not has_css_file:
-        logger.error("Can't find resource file '%s'. Aborting" % filename)
+        logger.error("Can't find resource file '%s'. Aborting", filename)
         raise Exception("Can't find resource file '%s'. Aborting" % filename)
     Gtk.StyleContext.add_provider_for_screen(
         Gdk.Screen.get_default(),
@@ -185,9 +185,9 @@ def connect_actions(actions):
     for action in actions:
         for button in actions[action][0]:
             if button is None:
-                logger.error("MISSING BUTTON: %s" % (action))
+                logger.error("MISSING BUTTON: %s", action)
         try:
             actions[action][1].connect(actions[action][0])
         except:
-            logger.error("Failed to connect action '%s'" % action)
+            logger.error("Failed to connect action '%s'", action)
             raise

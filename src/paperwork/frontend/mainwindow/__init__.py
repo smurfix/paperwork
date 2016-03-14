@@ -515,13 +515,13 @@ class JobDocSearcher(Job):
         self.emit('search-start')
 
         try:
-            logger.info("Searching: [%s]" % self.search)
+            logger.info("Searching: [%s]", self.search)
             documents = self.__docsearch.find_documents(
                 self.search,
                 search_type=self.__search_type)
         except Exception, exc:
-            logger.error("Invalid search: [%s]" % self.search)
-            logger.error("Exception was: %s: %s" % (type(exc), str(exc)))
+            logger.error("Invalid search: [%s]", self.search)
+            logger.error("Exception was: %s: %s", (type(exc), str(exc)))
             self.emit('search-invalid')
             return
         if not self.can_run:
@@ -605,8 +605,8 @@ class JobLabelPredictor(Job):
         self.can_run = True
         try:
             predicted_labels = self.__docsearch.guess_labels(self.doc)
-            logger.info("Predicted labels on document [%s]: [%s]"
-                        % (self.doc.docid, predicted_labels))
+            logger.info("Predicted labels on document [%s]: [%s]",
+                        self.doc.docid, predicted_labels)
             self.emit('predicted-labels', self.doc, predicted_labels)
         except StopIteration:
             return
@@ -775,7 +775,7 @@ class JobImporter(Job):
         def _ocr_next_page(self):
             try:
                 page = next(self._page_iterator)
-                logger.info("Examining page %s" % str(page))
+                logger.info("Examining page %s", page)
             except StopIteration:
                 logger.info("OCR has been redone on all the target pages")
                 if len(self._docs_to_label_predict) > 0:
@@ -793,7 +793,7 @@ class JobImporter(Job):
 
         def _ocr(self, page, page_img, boxes):
             if len(boxes) <= 0:
-                logger.info("Doing OCR on %s" % str(page))
+                logger.info("Doing OCR on %s", page)
                 self._main_win.show_doc(page.doc)
                 scan_workflow = self._main_win.make_scan_workflow()
                 drawer = self._main_win.make_scan_workflow_drawer(
@@ -807,7 +807,7 @@ class JobImporter(Job):
                                                     boxes, page))
                 scan_workflow.ocr(page_img, angles=1)
             else:
-                logger.info("Imported page %s already has text" % page)
+                logger.info("Imported page %s already has text", page)
                 self._add_doc_to_checklists(page.doc)
                 GLib.idle_add(self._ocr_next_page)
 
@@ -816,7 +816,7 @@ class JobImporter(Job):
                 page.img = img
             page.boxes = boxes
 
-            logger.info("OCR done on %s" % str(page))
+            logger.info("OCR done on %s", page)
             self._main_win.remove_scan_workflow(scan_workflow)
             self._main_win.show_page(page, force_refresh=True)
             self._add_doc_to_checklists(page.doc)
@@ -829,8 +829,8 @@ class JobImporter(Job):
 
         def _predict_labels(self):
             for doc in self._docs_to_label_predict:
-                logger.info("Predicting labels on doc %s"
-                            % str(doc))
+                logger.info("Predicting labels on doc %s",
+                            doc)
                 factory = self._main_win.job_factories[
                     'label_predictor_on_new_doc'
                 ]
@@ -843,7 +843,7 @@ class JobImporter(Job):
             GLib.idle_add(self._on_predicted_labels2, doc, predicted_labels)
 
         def _on_predicted_labels2(self, doc, predicted_labels):
-            logger.info("Label predicted on doc %s" % str(doc))
+            logger.info("Label predicted on doc %s", doc)
             for label in self._main_win.docsearch.label_list:
                 if label in predicted_labels:
                     self._main_win.docsearch.add_label(doc, label,
@@ -854,8 +854,8 @@ class JobImporter(Job):
             self._main_win.refresh_label_list()
 
         def _update_index(self):
-            logger.info("Updating index for %d docs"
-                        % len(self._docs_to_upd))
+            logger.info("Updating index for %d docs",
+                        len(self._docs_to_upd))
             job = self._main_win.job_factories['index_updater'].make(
                 self._main_win.docsearch, new_docs=self._docs_to_upd,
                 optimize=False, reload_list=True)
@@ -882,7 +882,7 @@ class JobImporter(Job):
         else:
             nb_docs = len(docs)
             nb_pages = 0
-        logger.info("Importing %d docs and %d pages" % (nb_docs, nb_pages))
+        logger.info("Importing %d docs and %d pages", nb_docs, nb_pages)
 
         self.__main_win.show_doc(docs[-1], force_refresh=True)
 
@@ -1018,7 +1018,7 @@ class ActionSwitchSorting(SimpleAction):
     def do(self):
         SimpleAction.do(self)
         (sorting_name, unused) = self.__main_win.get_doc_sorting()
-        logger.info("Document sorting: %s" % sorting_name)
+        logger.info("Document sorting: %s", sorting_name)
         self.__config['result_sorting'].value = sorting_name
         self.__config.write()
         self.__upd_search_results_action.do()
@@ -1120,13 +1120,13 @@ class ActionToggleLabel(object):
     def toggle_cb(self, renderer, objpath):
         label = self.__main_win.lists['labels']['model'][objpath][2]
         if label not in self.__main_win.doc.labels:
-            logger.info("Action: Adding label '%s' on document '%s'"
-                        % (label.name, str(self.__main_win.doc)))
+            logger.info("Action: Adding label '%s' on document '%s'",
+                        label.name, self.__main_win.doc)
             self.__main_win.docsearch.add_label(self.__main_win.doc, label,
                                                 update_index=False)
         else:
-            logger.info("Action: Removing label '%s' on document '%s'"
-                        % (label.name, self.__main_win.doc))
+            logger.info("Action: Removing label '%s' on document '%s'",
+                        label.name, self.__main_win.doc)
             self.__main_win.docsearch.remove_label(self.__main_win.doc, label,
                                                    update_index=False)
         self.__main_win.refresh_label_list()
@@ -1319,7 +1319,7 @@ class ActionImport(SimpleAction):
             return None
         file_uri = dialog.get_uri()
         dialog.destroy()
-        logger.info("Import: %s" % file_uri)
+        logger.info("Import: %s", file_uri)
         return file_uri
 
     def __select_importer(self, importers):
@@ -1498,7 +1498,7 @@ class ActionRedoOCR(SimpleAction):
         if page.doc != self._main_win.doc:
             self._main_win.show_doc(page.doc)
 
-        logger.info("Redoing OCR on %s" % str(page))
+        logger.info("Redoing OCR on %s", page)
         scan_workflow = self._main_win.make_scan_workflow()
         drawer = self._main_win.make_scan_workflow_drawer(
             scan_workflow, single_angle=True, page=page)
@@ -1599,7 +1599,7 @@ class BasicActionOpenExportDialog(SimpleAction):
         self.main_win.export['fileFormat']['model'].clear()
         nb_export_formats = 0
         formats = to_export.get_export_formats()
-        logger.info("[Export]: Supported formats: %s" % formats)
+        logger.info("[Export]: Supported formats: %s", formats)
         for out_format in to_export.get_export_formats():
             self.main_win.export['fileFormat']['model'].append([out_format])
             nb_export_formats += 1
@@ -1673,11 +1673,11 @@ class ActionSelectExportFormat(SimpleAction):
         exporter = target.build_exporter(imgformat)
         self.__main_win.export['exporter'] = exporter
 
-        logger.info("[Export] Format: %s" % (exporter))
-        logger.info("[Export] Can change quality ? %s"
-                    % exporter.can_change_quality)
-        logger.info("[Export] Can_select_format ? %s"
-                    % exporter.can_select_format)
+        logger.info("[Export] Format: %s", exporter)
+        logger.info("[Export] Can change quality ? %s",
+                    exporter.can_change_quality)
+        logger.info("[Export] Can_select_format ? %s",
+                    exporter.can_select_format)
 
         widgets = [
             (exporter.can_change_quality,
@@ -1889,11 +1889,11 @@ class ActionRefreshIndex(SimpleAction):
         self.__main_win.schedulers['main'].schedule(job)
 
     def __on_doc_exam_end(self, examiner):
-        logger.info("Document examen finished. Updating index ...")
-        logger.info("%d labels found" % len(examiner.labels))
-        logger.info("New document: %d" % len(examiner.new_docs))
-        logger.info("Updated document: %d" % len(examiner.docs_changed))
-        logger.info("Deleted document: %d" % len(examiner.docs_missing))
+        logger.info("Document examination finished. Updating index ...")
+        logger.info("Labels found: %d", len(examiner.labels))
+        logger.info("New documents: %d", len(examiner.new_docs))
+        logger.info("Updated documents: %d", len(examiner.docs_changed))
+        logger.info("Deleted documents: %d", len(examiner.docs_missing))
 
         examiner.docsearch.label_list = examiner.labels
 
@@ -2360,8 +2360,8 @@ class MainWindow(object):
             # Some distribution still have Gtk-3.10 at this time
             # (Linux Mint 17 for instance)
             logger.warning(
-                "Exception while configuring GTK decorations: %s: %s"
-                % (str(type(exc)), str(exc))
+                "Exception while configuring GTK decorations: %s: %s",
+                type(exc), exc
             )
 
         widget_tree.get_object("labelTotalPages").set_size_request(1, 30)
@@ -2524,14 +2524,14 @@ class MainWindow(object):
                 revealer.set_reveal_child(visible)
 
     def on_search_results_cb(self, search, documents):
-        logger.debug("Got %d documents" % len(documents))
+        logger.debug("Got %d documents", len(documents))
         self.doclist.set_docs(
             documents,
             need_new_doc=(search.strip() == u"")
         )
 
     def on_search_suggestions_cb(self, suggestions):
-        logger.debug("Got %d suggestions" % len(suggestions))
+        logger.debug("Got %d suggestions", len(suggestions))
         self.lists['suggestions']['gui'].freeze_child_notify()
         try:
             self.lists['suggestions']['model'].clear()
@@ -2625,7 +2625,7 @@ class MainWindow(object):
             logger.info("Doc is already shown")
             return
 
-        logger.info("Showing document %s" % doc)
+        logger.info("Showing document %s", doc)
         self.doc = doc
         if not self.page or self.page.doc.docid != doc.docid:
             if doc.nb_pages > 0:
@@ -2751,7 +2751,7 @@ class MainWindow(object):
         if page is None:
             return
 
-        logger.info("Showing page %s" % page)
+        logger.info("Showing page %s", page)
         self.page = page
 
         if (page.doc != self.doc or force_refresh):
@@ -2910,8 +2910,8 @@ class MainWindow(object):
         if old_size == new_size:
             return
 
-        logger.info("Image view port resized. (%d, %d) --> (%d, %d)"
-                    % (old_size[0], old_size[1], new_size[0], new_size[1]))
+        logger.info("Image view port resized. (%d, %d) --> (%d, %d)",
+                    old_size[0], old_size[1], new_size[0], new_size[1])
         self.img['scrollbar_size'] = new_size
 
         (auto, factor) = self.get_zoom_level()
@@ -2931,8 +2931,8 @@ class MainWindow(object):
 
     def __set_zoom_level_on_scroll(self, zoom):
         zoom_model = self.zoom_level['model']
-        logger.info("Changing zoom level: %f --> %f"
-                    % (zoom_model.get_value(), zoom))
+        logger.info("Changing zoom level: %f --> %f",
+                    zoom_model.get_value(), zoom)
         zoom_model.set_value(zoom)
         self.zoom_level['auto'] = False
         self.update_page_sizes()

@@ -56,7 +56,7 @@ class SinglePdfImporter(object):
         Import the specified PDF file
         """
         doc = PdfDoc(docsearch.rootdir, label_store=label_store)
-        logger.info("Importing doc '%s' ..." % file_uri)
+        logger.info("Importing doc '%s' ...", file_uri)
         doc.import_pdf(file_uri)
         return ([doc], None, True)
 
@@ -111,7 +111,7 @@ class MultiplePdfImporter(object):
         """
         Import the specified PDF files
         """
-        logger.info("Importing PDF from '%s'" % (file_uri))
+        logger.info("Importing PDF from '%s'", file_uri)
         parent = Gio.File.parse_name(file_uri)
         doc = None
         docs = []
@@ -122,8 +122,8 @@ class MultiplePdfImporter(object):
             if not child.get_basename().lower().endswith(".pdf"):
                 continue
             if docsearch.is_hash_in_index(PdfDoc.hash_file(child.get_path())):
-                logger.info("Document %s already found in the index. Skipped"
-                            % (child.get_path()))
+                logger.info("Document %s already found in the index. Skipped",
+                            child.get_path())
                 continue
             try:
                 # make sure we can import it
@@ -170,7 +170,7 @@ class SingleImageImporter(object):
         """
         Import the specified image
         """
-        logger.info("Importing doc '%s'" % (file_uri))
+        logger.info("Importing doc '%s'", file_uri)
         if current_doc is None:
             current_doc = ImgDoc(docsearch.rootdir)
         new = current_doc.is_new

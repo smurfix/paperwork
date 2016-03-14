@@ -392,7 +392,7 @@ class MultiscanDialog(GObject.GObject):
         self.dialog.destroy()
 
     def on_scan_error_cb(self, page_scan, exception):
-        logger.warning("Scan failed: %s" % str(exception))
+        logger.warning("Scan failed: %s", exception)
         logger.info("Scan job cancelled")
 
         self.emit('need-doclist-refresh')

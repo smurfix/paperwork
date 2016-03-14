@@ -87,7 +87,7 @@ class JobDeviceFinder(Job):
             for device in devices:
                 selected = (self.__selected_devid == device.name)
                 name = self.__get_dev_name(device)
-                logger.info("Device found: [%s] -> [%s]" % (name, device.name))
+                logger.info("Device found: [%s] -> [%s]", name, device.name)
                 sys.stdout.flush()
                 self.emit('device-found', name, device.name, selected)
         finally:
@@ -152,21 +152,21 @@ class JobSourceFinder(Job):
         }
         if src_id.lower() in TRANSLATIONS:
             return TRANSLATIONS[src_id.lower()]
-        logger.warning("No translation for source [%s]" % src_id)
+        logger.warning("No translation for source [%s]", src_id)
         return src_id
 
     def do(self):
         self.emit("source-finding-start")
         try:
-            logger.info("Looking for resolution of device [%s]"
-                        % (self.__devid))
+            logger.info("Looking for resolution of device [%s]",
+                        self.__devid)
             device = pyinsane.Scanner(name=self.__devid)
             sys.stdout.flush()
             if 'source' in device.options:
                 sources = device.options['source'].constraint
             else:
                 sources = []
-            logger.info("Sources found: %s" % str(sources))
+            logger.info("Sources found: %s", sources)
             sys.stdout.flush()
             for source in sources:
                 name = self.__get_source_name_translated(source)
@@ -248,15 +248,15 @@ class JobResolutionFinder(Job):
     def do(self):
         self.emit("resolution-finding-start")
         try:
-            logger.info("Looking for resolution of device [%s]"
-                        % (self.__devid))
+            logger.info("Looking for resolution of device [%s]",
+                        self.__devid)
             device = pyinsane.Scanner(name=self.__devid)
             sys.stdout.flush()
             if 'resolution' in device.options:
                 resolutions = device.options['resolution'].constraint
             else:
                 resolutions = []
-            logger.info("Resolutions found: %s" % str(resolutions))
+            logger.info("Resolutions found: %s", resolutions)
             sys.stdout.flush()
             # Sometimes sane return the resolutions as a integer array,
             # sometimes as a range (-> tuple). So if it is a range, we turn
@@ -358,8 +358,8 @@ class JobCalibrationScan(Job):
                 break
             resolution = nresolution
 
-        logger.info("Will do the calibration scan with a resolution of %d"
-                    % resolution)
+        logger.info("Will do the calibration scan with a resolution of %d",
+                    resolution)
 
         # scan
         dev = pyinsane.Scanner(name=self.__devid)
@@ -367,12 +367,12 @@ class JobCalibrationScan(Job):
         if self.__source:
             if dev.options['source'].capabilities.is_active():
                 dev.options['source'].value = self.__source
-            logger.info("Scanner source set to '%s'" % self.__source)
+            logger.info("Scanner source set to '%s'", self.__source)
         try:
             dev.options['resolution'].value = resolution
         except pyinsane.SaneException as exc:
-            logger.warning("Unable to set scanner resolution to %d: %s"
-                           % (resolution, exc))
+            logger.warning("Unable to set scanner resolution to %d: %s",
+                           resolution, exc)
         if dev.options['mode'].capabilities.is_active():
             if "Color" in dev.options['mode'].constraint:
                 dev.options['mode'].value = "Color"
@@ -473,7 +473,7 @@ class ActionSelectScanner(SimpleAction):
                 settings['gui'].set_sensitive(False)
             self.__settings_win.calibration["scan_button"].set_sensitive(False)
             return
-        logger.info("Selected scanner: %d" % idx)
+        logger.info("Selected scanner: %d", idx)
 
         devid = devid_settings['stores']['loaded'][idx][1]
 
@@ -497,7 +497,7 @@ class ActionSelectSource(SimpleAction):
         source_settings = self.__settings_win.device_settings['source']
         idx = source_settings['gui'].get_active()
         self.__settings_win.calibration["scan_button"].set_sensitive(True)
-        logger.info("Selected source: %d" % idx)
+        logger.info("Selected source: %d", idx)
         if idx < 0:
             # happens when the scanner list has been updated
             # but no source has been found
@@ -557,7 +557,7 @@ class ActionApplySettings(SimpleAction):
                 resolution = setting['stores']['loaded'][idx][1]
                 self.__config['scanner_resolution'].value = resolution
         except Exception as exc:
-            logger.warning("Failed to update scanner settings: %s" % str(exc))
+            logger.warning("Failed to update scanner settings: %s", exc)
 
         setting = self.__settings_win.ocr_settings['enabled']
         enabled = setting['gui'].get_active()
@@ -635,7 +635,7 @@ class SettingsWindow(GObject.GObject):
         distrib = platform.dist()
         if distrib:
             distrib = distrib[0].lower()
-            logger.info("Distribution: [%s]" % distrib)
+            logger.info("Distribution: [%s]", distrib)
             for widget in widget_tree.get_objects():
                 if type(widget) == Gtk.LinkButton:
                     uri = widget.get_uri()
@@ -807,7 +807,7 @@ class SettingsWindow(GObject.GObject):
                 langs.append((short_lang, long_lang))
             except KeyError:
                 logger.error("Warning: Long name not found for language "
-                             "'%s'." % short_lang)
+                             "'%s'.", short_lang)
                 logger.warning("  Will use short name as long name.")
                 langs.append((short_lang, short_lang))
         return langs
@@ -828,7 +828,7 @@ class SettingsWindow(GObject.GObject):
     def on_value_found_cb(self, settings,
                           user_name, store_name, active):
         store_line = [user_name, store_name]
-        logger.info("Got value [%s]" % store_line)
+        logger.info("Got value [%s]", store_line)
         settings['stores']['loaded'].append(store_line)
         if active:
             settings['active_idx'] = settings['nb_elements']
@@ -846,7 +846,7 @@ class SettingsWindow(GObject.GObject):
         settings = self.device_settings['source']
         sources = [x[1].lower() for x in settings['stores']['loaded']]
         has_feeder = False
-        logger.info("Scanner sources: %s" % str(sources))
+        logger.info("Scanner sources: %s", sources)
         for src in sources:
             if "feeder" in src:
                 has_feeder = True

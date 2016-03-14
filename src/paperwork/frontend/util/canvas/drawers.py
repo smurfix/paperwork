@@ -377,9 +377,9 @@ class TargetAreaDrawer(Drawer):
         self.rect_color = rect_color
         self.out_color = out_color
 
-        logger.info("Drawer: Target area: %s (%s) << %s (%s)"
-                    % (str(self._position), str(self.size),
-                       str(self.target_position), str(self.target_size)))
+        logger.info("Drawer: Target area: %s (%s) << %s (%s)",
+                    self._position, self.size,
+                    self.target_position, self.target_size)
 
     def _get_position(self):
         return self._position
