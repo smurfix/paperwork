@@ -17,6 +17,7 @@
 """
 Code to manage document labels
 """
+import logging
 import os
 import pickle
 
@@ -26,6 +27,7 @@ import simplebayes
 from paperwork.backend.util import mkdir_p
 from paperwork.backend.util import strip_accents
 
+logger = logging.getLogger(__name__)
 
 class Label(object):
 
@@ -241,7 +243,10 @@ class LabelGuesser(object):
             self._bayes[label_name] = simplebayes.SimpleBayes(
                 cache_path=baye_dir
             )
-            self._bayes[label_name].cache_train()
+            try:
+                self._bayes[label_name].cache_train()
+            except Exception:
+                logger.exception("Could not load cache for label '%s' from %s",label_name,self._bayes[label_name].get_cache_location())
 
     def get_updater(self):
         return LabelGuessUpdater(self)
