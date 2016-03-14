@@ -36,6 +36,7 @@ thread to avoid blocking the GUI.
 
 logger = logging.getLogger(__name__)
 
+_job_idx_generator = itertools.count()
 
 class JobException(Exception):
 
@@ -56,8 +57,33 @@ class JobFactory(object):
     def __eq__(self, other):
         return self is other
 
+class JobEntry(object):
+    def __init__(self, job):
+        self.job = job
+        self.idx = next(_job_idx_generator)
 
-class Job(GObject.GObject):  # inherits from GObject so it can send signalsa
+    def __eq__(self, other):
+        if isinstance(other, JobEntry):
+            other = other.job
+        return self.job is other
+
+    def __ne__(self, other):
+        if isinstance(other, JobEntry):
+            other = other.job
+        return self.job is not other
+
+    def __hash__(self):
+        return hash(self.job)
+
+    def __cmp__(self,other):
+        if self is other:
+            return 0
+        if self.job.priority != other.job.priority:
+            return cmp(other.job.priority,self.job.priority)
+            # sort in reverse
+        return cmp(self.idx,other.idx) # guaranteed unequal
+
+class Job(GObject.GObject):  # inherits from GObject so it can send signals
 
     MAX_TIME_FOR_UNSTOPPABLE_JOB = 0.5  # secs
     MAX_TIME_TO_STOP = 0.5  # secs
@@ -82,6 +108,10 @@ class Job(GObject.GObject):  # inherits from GObject so it can send signalsa
 
         self._wait_time = None
         self._wait_cond = threading.Condition()
+
+    @property
+    def _entry(self):
+        return JobEntry(self)
 
     def _wait(self, wait_time, force=False):
         """Convenience function to wait while being stoppable"""
@@ -117,7 +147,14 @@ class Job(GObject.GObject):  # inherits from GObject so it can send signalsa
         raise NotImplementedError()
 
     def __eq__(self, other):
+        if isinstance(other,JobEntry):
+            other = other.job
         return self is other
+
+    def __ne__(self, other):
+        if isinstance(other,JobEntry):
+            other = other.job
+        return self is not other
 
     def __str__(self):
         return ("%s:%d" % (self.factory.name, self.id))
@@ -137,8 +174,6 @@ class JobScheduler(object):
         self._job_queue = []
         self._active_job = None
 
-        self._job_idx_generator = itertools.count()
-
     def start(self):
         """Starts the scheduler"""
         assert(not self.running)
@@ -155,11 +190,11 @@ class JobScheduler(object):
 
             self._job_queue_cond.acquire()
             try:
-                while len(self._job_queue) <= 0:
+                while not self._job_queue:
                     self._job_queue_cond.wait()
                     if not self.running:
                         return
-                (_, _, self._active_job) = heapq.heappop(self._job_queue)
+                self._active_job = heapq.heappop(self._job_queue).job
             finally:
                 self._job_queue_cond.release()
 
@@ -241,9 +276,7 @@ class JobScheduler(object):
 
         self._job_queue_cond.acquire()
         try:
-            heapq.heappush(self._job_queue,
-                           (-1 * job.priority, next(self._job_idx_generator),
-                            job))
+            heapq.heappush(self._job_queue, job._entry)
 
             # if a job with a lower priority is running, we try to stop
             # it and take its place
@@ -260,10 +293,7 @@ class JobScheduler(object):
                     # previously. In which case we don't want to requeue
                     # it again
                     if active not in self._job_queue:
-                        heapq.heappush(self._job_queue,
-                                       (-1 * active.priority,
-                                        next(self._job_idx_generator),
-                                        active))
+                        heapq.heappush(self._job_queue, job._entry)
 
             self._job_queue_cond.notify_all()
         finally:
@@ -274,15 +304,15 @@ class JobScheduler(object):
         try:
             try:
                 to_rm = []
-                for job in self._job_queue:
-                    if condition(job[2]):
-                        to_rm.append(job)
-                for job in to_rm:
-                    self._job_queue.remove(job)
-                    if job[2].already_started_once:
-                        job[2].stop(will_resume=False)
+                for j in self._job_queue:
+                    if condition(j.job):
+                        to_rm.append(j)
+                for j in to_rm:
+                    self._job_queue.remove(j)
+                    if j.job.already_started_once:
+                        j.job.stop(will_resume=False)
                     logger.debug("[Scheduler %s] Job %s cancelled"
-                                 % (self.name, str(job[2])))
+                                 % (self.name, str(j.job)))
             except ValueError:
                 pass
 
